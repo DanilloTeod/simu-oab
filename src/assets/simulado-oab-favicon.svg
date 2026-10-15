@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+  <title id="title">Simulado OAB</title>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="#2563EB"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="12" r="3.1" fill="#FFFFFF" stroke="none"/>
+    <path d="M32 16v27" stroke-width="4.4"/>
+    <path d="M16 20h32" stroke-width="4.4"/>
+    <path d="M20 20 13.5 31.5M20 20l6.5 11.5" stroke-width="3.2"/>
+    <path d="M11 31.5Q20 41.5 29 31.5" stroke-width="3.2"/>
+    <path d="M44 20l-6.5 11.5M44 20l6.5 11.5" stroke-width="3.2"/>
+    <path d="M35 31.5Q44 41.5 53 31.5" stroke-width="3.2"/>
+    <path d="M24 44h16" stroke-width="4.4"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title">
+  <title id="title">Simulado OAB</title>
+  <style>
+    .background { fill: #eff6ff; }
+    .mark { color: #1d4ed8; }
+    .outline { stroke: #1d4ed8; }
+    @media (prefers-color-scheme: dark) {
+      .background { fill: #2563eb; }
+      .mark { color: #ffffff; }
+      .outline { stroke: #ffffff; }
+    }
+  </style>
+  <rect class="background" x="1.5" y="1.5" width="61" height="61" rx="14"/>
+  <g class="mark" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Balanced scales of justice -->
+    <circle cx="32" cy="11.5" r="3.3" fill="currentColor" stroke="none"/>
+    <path d="M32 16v24M17 21h30" stroke-width="4.2"/>
+    <path d="M19 21 12.5 32M19 21l6.5 11M45 21l-6.5 11M45 21l6.5 11" stroke-width="3.1"/>
+    <path d="M10.5 32Q19 41.5 27.5 32M36.5 32Q45 41.5 53.5 32" stroke-width="3.2"/>
+    <path d="M26 41h12l3 3H23z" fill="currentColor" stroke="none"/>
+    <!-- Open book: law + study -->
+    <path d="M10.5 47.5Q21 44.5 31.5 51.5V56Q21 49.5 10.5 52zM53.5 47.5Q43 44.5 32.5 51.5V56Q43 49.5 53.5 52z" fill="currentColor" stroke="none"/>
+    <path class="outline" d="M32 51.5v4.8" stroke-width="1.8"/>
+  </g>
+</svg>

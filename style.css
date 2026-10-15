@@ -1,0 +1,325 @@
+/* Definição do Tema Escuro (Cores inspiradas em interfaces modernas) */
+:root {
+    --bg-main: #0f172a;       /* Fundo principal bem escuro (Azul Noite/Chumbo) */
+    --bg-card: #1e293b;       /* Fundo dos cartões (um tom acima para dar contraste) */
+    --text-main: #f8fafc;     /* Texto principal quase branco */
+    --text-muted: #94a3b8;    /* Texto secundário/cinzento */
+    --border-color: #334155;  /* Cor subtil para bordas */
+    --primary: #3b82f6;       /* Azul destaque (botões e seleções) */
+    --primary-hover: #2563eb; /* Azul mais escuro para o hover do botão */
+}
+
+/* Reset básico e estrutura central */
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* O Cartão Principal (A "Caixa" do conteúdo) */
+.card {
+    background-color: #1e293b; /* Tom escuro elegante */
+    color: #f1f5f9;
+    padding: 32px;
+    border-radius: 12px;
+    max-width: 750px; /* Impede que o texto fique demasiado largo para ler */
+    margin: 20px auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Títulos e textos */
+h1 {
+    margin-top: 0;
+    font-size: 24px;
+    color: var(--text-main);
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.enunciado {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.4; /* O espaçamento entre linhas que elimina a sensação de texto 'amontoado' */
+    color: #e2e8f0; /* Cinzento claro que descansa a vista em vez de branco puro */
+    text-align: justify;
+    letter-spacing: 0.01em; /* Leve espaçamento entre letras para nitidez */
+}
+
+
+/* Estilização da barra de rolagem interna do gabarito */
+.card-gabarito::-webkit-scrollbar {
+    width: 6px;
+}
+.card-gabarito::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.gabarito-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.gabarito-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.card-result {
+    max-width: 950px !important; /* Aumenta a largura máxima para o texto respirar */
+    width: 95% !important;
+}
+/* Título indicador do gabarito detalhado */
+.gabarito-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+/* Contentor para alinhar as respostas do usuário e a correta lado a lado */
+.gabarito-respostas {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.container-alternativas {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espaçamento vertical limpo e equilibrado entre as opções */
+    margin-top: 24px;
+    text-align: left;
+}
+
+.gabarito-item {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 7px solid #6c757d; /* Borda lateral bem grossa e visível */
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 18px;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.gabarito-enunciado {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+.gabarito-alternativas {
+    margin-bottom: 14px;
+    padding-left: 10px;
+    border-left: 2px solid rgba(255, 255, 255, 0.15);
+    text-align: justify;
+}
+
+.gabarito-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3); /* Fundo contrastante para destacar a zona de respostas */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-top: 14px;
+    font-size: 0.95rem;
+}
+.card-gabarito {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* efeito ao passar o mouse em cima */
+.btn-alternativa:hover {
+    background-color: #3b465f;
+    border-color: #60a5fa; /* Toque subtil de azul moderno */
+}
+
+/* Destaca a letra (A., B., C., D.) para facilitar a leitura rápida */
+.btn-alternativa strong {
+    color: #60a5fa;
+    margin-right: 8px;
+    font-weight: 600;
+}
+.btn-alternativa {
+    background-color: #2a3447; /* Tom ligeiramente mais claro que o card para criar contraste */
+    color: #f1f5f9;
+    border: 1px solid #3b465f;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+}
+
+.question-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.question-title {
+    margin: 12px 0 24px 0;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+
+/* Botão Principal (Ex: Iniciar, Tentar Novamente) */
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Botões das Alternativas */
+.btn-materia {
+    background-color: rgba(15, 23, 42, 0.6);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 15px;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+/* Efeito de hover (quando passa o mouse) */
+.btn-materia:hover {
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* ESTADO SELECIONADO: Quando o JS adiciona a classe .ativo */
+.btn-alternativa.ativo {
+    border-color: var(--primary);
+    background-color: rgba(18, 28, 218, 0.2);
+    box-shadow: 0 0 10px rgba(19, 89, 201, 0.866);
+}
+
+.btn-materia.ativo {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.concluido {
+    font-size: 1.2rem; margin: 20px 0;
+    color: var(--text-main);
+}
+
+
+
+/* Layout geral da tela de resultado em 2 colunas */
+.resultado-container-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+}
+
+/* Caixa lateral esquerda (a grelha) */
+.sidebar-questoes {
+    width: 280px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.sidebar-titulo {
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+/* A grelha em si (os quadradinhos) */
+.grid-botoes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5 quadradinhos por linha */
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* O estilo de cada quadradinho numerado */
+.btn-grid-questao {
+    aspect-ratio: 1; /* Torna o botão num quadrado perfeito */
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-grid-questao:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Estilo para quando o quadradinho é o selecionado atualmente (borda azul igual à imagem) */
+.btn-grid-questao.ativo {
+    border: 2px solid #3b82f6;
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* Painel da direita onde aparece a questão detalhada */
+.painel-detalhe {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+}
