@@ -21,17 +21,16 @@
         box-sizing: border-box;
     }
 
-    /* Transforma o layout de colunas da tela de resultado numa coluna única vertical */
     .resultado-container-layout {
         flex-direction: column !important;
         gap: 15px;
+        display: flex;
     }
 
     /* A barra lateral de questões passa a ocupar a largura toda */
     .sidebar-questoes {
         width: 100% !important;
-        max-height: 150px; /* Limita a altura com scroll se forem muitas questões */
-        overflow-y: auto;
+        max-width: 100% !important;
     }
 
     /* O painel de detalhe adapta-se à largura total */
