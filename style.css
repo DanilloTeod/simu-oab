@@ -9,6 +9,47 @@
     --primary-hover: #2563eb; /* Azul mais escuro para o hover do botão */
 }
 
+@media (max-width: 768px) {
+    /* Reduz um pouco as margens gerais do body e dos cartões em ecrãs pequenos */
+    body {
+        padding: 10px;
+    }
+
+    .card {
+        padding: 20px 15px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Transforma o layout de colunas da tela de resultado numa coluna única vertical */
+    .resultado-container-layout {
+        flex-direction: column !important;
+        gap: 15px;
+    }
+
+    /* A barra lateral de questões passa a ocupar a largura toda */
+    .sidebar-questoes {
+        width: 100% !important;
+        max-height: 150px; /* Limita a altura com scroll se forem muitas questões */
+        overflow-y: auto;
+    }
+
+    /* O painel de detalhe adapta-se à largura total */
+    .painel-detalhe {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Ajusta os botões e títulos para não rebentarem o ecrã */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .btn-materia, .btn-primary {
+        font-size: 0.95rem;
+        padding: 12px;
+    }
+}
 /* Reset básico e estrutura central */
 body {
     background-color: var(--bg-main);
