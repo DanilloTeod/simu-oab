@@ -20,7 +20,10 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    flex-direction: column;
 }
+
+
 
 /* O Cartão Principal (A "Caixa" do conteúdo) */
 .card {
@@ -322,4 +325,27 @@ p {
     border-radius: 10px;
     padding: 20px;
     box-sizing: border-box;
+}
+
+/* O #app vai crescer para empurrar o rodapé para o fundo */
+#app {
+    flex: 1;
+}
+
+
+.rodape-site {
+    text-align: center;
+    padding: 20px 10px;
+    margin-top: auto; /* Empurra o rodapé para o fim do container */
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rodape-site p {
+    margin: 4px 0;
+}
+
+.rodape-site strong {
+    color: rgba(255, 255, 255, 0.9);
 }
