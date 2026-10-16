@@ -18,13 +18,37 @@ export function render() {
                 <button data-materia="processualcivil" class="btn-materia">Direito Processual Civil</button>
                 <button data-materia="penal" class="btn-materia">Direito Penal</button>        
                 <button data-materia="processualpenal" class="btn-materia">Direito Processual Penal</button>        
-
+                
+                <div class="card">
+                    <div class="form-group">
+                    <label for="edicao">Edição: </label>
+                    <select id="edicao" name="edicao">
+                        <option value="39">39° Exame de Ordem Unificado</option>
+                        <option value="40">40° Exame de Ordem Unificado</option>
+                        <option value="41">41° Exame de Ordem Unificado</option>
+                        <option value="42">42° Exame de Ordem Unificado</option>
+                        <option value="43">43° Exame de Ordem Unificado</option>
+                        <option value="44">44° Exame de Ordem Unificado</option>
+                        <option value="45">45° Exame de Ordem Unificado</option>
+                        <option value="46">46° Exame de Ordem Unificado</option>
+                        <option value="47">47° Exame de Ordem Unificado</option>
+                    </select>
+                    </div>
+                </div>
                 <button id="btn-iniciar" class="btn-primary">Iniciar Simulado</button>
             </div>
         `;
 
+
         const subjectButtons = app.querySelectorAll('.btn-materia');
         const start = app.querySelector('#btn-iniciar');
+
+        const edition = app.querySelector('#edicao');
+        edition.value = state.editionSelected;
+
+        edition.addEventListener('change', (e) => {
+            state.editionSelected = e.target.value;
+        });
 
         // 1. Configura o clique em cada botão de matéria (O LOOP)
         subjectButtons.forEach(botao => {
@@ -54,7 +78,7 @@ export function render() {
     // --- TELA: QUIZ ---
     else if (state.screen === 'QUIZ') {
         // é chamada a funcao assincrona para carregar os dados
-        loadQuestions().then(questoes => {
+        loadQuestions(state.editionSelected).then(questoes => {
             if (state.currentIndex >= questoes.length){ // fim das questoes
                 state.screen = "RESULT";
                 render();
@@ -90,7 +114,7 @@ export function render() {
 
             // Injetando tudo no container
             container.innerHTML = `
-            <p class="enunciado"><strong> Questão ${questao.id}. </strong>${questao.enunciado}</p>
+            <p class="enunciado"><strong> Questão ${questao.id} (${state.editionSelected}º Exame OAB 1ª Fase). </strong>${questao.enunciado}</p>
             <div class="container-alternativas">
                 ${buttonsHTML}
             </div>
@@ -137,8 +161,7 @@ export function render() {
             state.currentResultIndex = 0;
         };
 
-        loadQuestions().then(questoes => { // funcao assincrona que devolve uma promise
-            let gabaritoHTML = '';
+        loadQuestions(state.editionSelected).then(questoes => { // funcao assincrona que devolve uma promise
             let gridBotoesHTML = '';
             userState.answers.forEach((answer, index) => {
                 const qId = userState.questionId[index]; // pego o id da questao nos indices
@@ -203,7 +226,7 @@ export function render() {
                             <!-- Coluna Direita: Detalhe da Questão Atual -->
                             <div class="painel-detalhe" style="border-left: 6px solid ${corBordaDetalhe}; background-color: ${corFundoDetalhe};">
                                 <div class="gabarito-enunciado">
-                                    <strong>Questão ${qOriginalAtual.id} (${indexAtual + 1} de ${userState.answers.length}).</strong> ${qOriginalAtual.enunciado}
+                                    <strong>Questão ${qOriginalAtual.id} (${state.editionSelected}º Exame OAB 1ª Fase) (${indexAtual + 1} de ${userState.answers.length}).</strong> ${qOriginalAtual.enunciado}
                                 </div>
 
                                 <div style="margin-bottom: 15px;">
@@ -229,7 +252,7 @@ export function render() {
                 botao.addEventListener('click', (e) => {
                     const novoIndex = parseInt(e.currentTarget.getAttribute('data-index'));
                     state.currentResultIndex = novoIndex;
-                    render(); // Atualiza o ecrã para mostrar a nova questão selecionada
+                    render(); // atualiza a tela para mostrar a nova questão selecionada
                 });
         });
 

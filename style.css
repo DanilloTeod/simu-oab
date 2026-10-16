@@ -389,3 +389,21 @@ p {
 .rodape-site strong {
     color: rgba(255, 255, 255, 0.9);
 }
+
+
+.edicao {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.edicao:focus {
+    border-color: #3b82f6;
+}
