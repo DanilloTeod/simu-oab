@@ -27,10 +27,10 @@ export function render() {
                 <button data-materia="penal" class="btn-materia">Direito Penal</button>        
                 <button data-materia="processualpenal" class="btn-materia">Direito Processual Penal</button>        
                 
-                <div class="card">
-                    <div class="form-group">
-                    <label for="edicao">Edição: </label>
-                    <select class="edicao" id="edicao" name="edicao">
+
+                <div class="edicao-container">
+                    <label for="edicao" class="label-edicao">Edição da Prova: </label>
+                    <select class="input-edicao" id="edicao" name="edicao">
                         <option value="39">39° Exame de Ordem Unificado</option>
                         <option value="40">40° Exame de Ordem Unificado</option>
                         <option value="41">41° Exame de Ordem Unificado</option>
@@ -41,7 +41,6 @@ export function render() {
                         <option value="46">46° Exame de Ordem Unificado</option>
                         <option value="47">47° Exame de Ordem Unificado</option>
                     </select>
-                    </div>
                 </div>
                 <button id="btn-iniciar" class="btn-primary">Iniciar Simulado</button>
             </div>

@@ -236,8 +236,6 @@ p {
     color: var(--text-main);
 }
 
-
-
 /* Layout geral da tela de resultado em 2 colunas */
 .resultado-container-layout {
     display: flex;
@@ -315,7 +313,6 @@ p {
     flex: 1;
 }
 
-
 .rodape-site {
     text-align: center;
     padding: 20px 10px;
@@ -333,7 +330,6 @@ p {
     color: rgba(255, 255, 255, 0.9);
 }
 
-
 .edicao {
     width: 100%;
     padding: 12px 16px;
@@ -349,4 +345,52 @@ p {
 
 .edicao:focus {
     border-color: #3b82f6;
+}
+.edicao-container {
+    margin: 8px 0 16px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.label-edicao {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.input-edicao {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #111827; /* Mesmo tom escuro dos botões */
+    color: #f8fafc;
+    border: 1px solid #1e293b; /* Mesma borda sutil */
+    border-radius: 8px; /* Mesmos cantos arredondados */
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    
+    /* Centralização perfeita e seta customizada moderna */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding-right: 40px; /* Garante que o texto longo não encoste na seta */
+}
+
+.input-edicao:hover {
+    border-color: #3b82f6;
+    background-color: #1e293b; /* Efeito hover igual aos botões de cima */
+}
+
+.input-edicao:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
