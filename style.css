@@ -63,7 +63,9 @@ body {
     flex-direction: column;
 }
 
-
+html {
+  scroll-behavior: smooth;
+}
 
 /* O Cartão Principal (A "Caixa" do conteúdo) */
 .card {
@@ -97,20 +99,6 @@ p {
     letter-spacing: 0.01em; /* Leve espaçamento entre letras para nitidez */
 }
 
-
-/* Estilização da barra de rolagem interna do gabarito */
-.card-gabarito::-webkit-scrollbar {
-    width: 6px;
-}
-.card-gabarito::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-.gabarito-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
 .gabarito-badge {
     background: rgba(99, 102, 241, 0.2);
     color: #818cf8;
@@ -124,20 +112,6 @@ p {
     max-width: 950px !important; /* Aumenta a largura máxima para o texto respirar */
     width: 95% !important;
 }
-/* Título indicador do gabarito detalhado */
-.gabarito-title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 0.95rem;
-    margin-bottom: 6px;
-}
-
-/* Contentor para alinhar as respostas do usuário e a correta lado a lado */
-.gabarito-respostas {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-}
 
 .container-alternativas {
     display: flex;
@@ -147,18 +121,6 @@ p {
     text-align: left;
 }
 
-.gabarito-item {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-left: 7px solid #6c757d; /* Borda lateral bem grossa e visível */
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 18px;
-    text-align: left;
-    box-sizing: border-box;
-}
 
 .gabarito-enunciado {
     font-size: 1rem;
@@ -184,11 +146,6 @@ p {
     padding: 12px 18px;
     margin-top: 14px;
     font-size: 0.95rem;
-}
-.card-gabarito {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding-right: 10px;
 }
 
 /* efeito ao passar o mouse em cima */
@@ -217,20 +174,6 @@ p {
     transition: background-color 0.2s ease, border-color 0.2s ease;
     display: flex;
     align-items: flex-start;
-}
-
-.question-counter {
-    font-size: 13px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.question-title {
-    margin: 12px 0 24px 0;
-    font-size: 18px;
-    line-height: 1.5;
-    color: var(--text-main);
 }
 
 /* Botão Principal (Ex: Iniciar, Tentar Novamente) */

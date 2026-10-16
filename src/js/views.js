@@ -1,5 +1,13 @@
-import { userState, state } from "./state.js"
+import { userState, state } from "./state.js";
 import { loadQuestions } from "./api.js";
+
+
+function scrollTop() {
+    window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
 export function render() {
     let choice = null;
@@ -22,7 +30,7 @@ export function render() {
                 <div class="card">
                     <div class="form-group">
                     <label for="edicao">Edição: </label>
-                    <select id="edicao" name="edicao">
+                    <select class="edicao" id="edicao" name="edicao">
                         <option value="39">39° Exame de Ordem Unificado</option>
                         <option value="40">40° Exame de Ordem Unificado</option>
                         <option value="41">41° Exame de Ordem Unificado</option>
@@ -93,6 +101,7 @@ export function render() {
                 render();
                 return;
             };
+            scrollTop();
             app.innerHTML = `
                 <div class="card" style="text-align: center;">
                     <h1>Simulado de ${state.subject.toUpperCase()} </h1>
@@ -160,7 +169,6 @@ export function render() {
         });
     }
     else if (state.screen == "RESULT"){
-
         if (state.currentResultIndex == undefined){
             state.currentResultIndex = 0;
         };
@@ -207,7 +215,7 @@ export function render() {
                 console.log(userState.answers)
                 console.log(userState.questionId)
             
-
+                scrollTop();
                 app.innerHTML = `
                     <div class="card card-result" style="max-width: 1050px !important;">
                         <!-- Topo Centralizado e Destacado -->
