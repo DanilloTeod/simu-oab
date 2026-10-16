@@ -79,6 +79,15 @@ export function render() {
     else if (state.screen === 'QUIZ') {
         // é chamada a funcao assincrona para carregar os dados
         loadQuestions(state.editionSelected).then(questoes => {
+            if (questoes.length === 0){
+                app.innerHTML = `
+                    <div class="card" style="text-align: center;">
+                        <p>Não existem questões cadastradas para esta matéria ainda.</p>
+                    </div>
+                `;
+                return;
+            }
+
             if (state.currentIndex >= questoes.length){ // fim das questoes
                 state.screen = "RESULT";
                 render();
@@ -93,11 +102,6 @@ export function render() {
             </div>
             `;
             const container = document.getElementById('container-question');
-
-            if (questoes.length === 0){
-                container.innerHTML = `<p>Não existem questões cadastradas para esta matéria ainda.</p>`;
-                return;
-            }
 
             choice = null;
             const questao = questoes[state.currentIndex];
