@@ -1,12 +1,23 @@
 import { userState, state } from "./state.js";
 import { loadQuestions } from "./api.js";
 
-
 function scrollTop() {
     window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
+}
+
+function formatarComentario(texto) {
+    if (!texto) return "Comentário não disponível.";
+
+    // Substitui automaticamente qualquer ocorrência de "A alternativa X" por uma quebra de linha dupla + negrito
+    let formatado = texto.replace(/(A alternativa [A-D] está)/gi, '<br><br><strong>$1</strong>');
+    
+    // Opcional: Se houver algum trecho inicial antes das alternativas, garante que fica bem limpo
+    // (A Regex acima já separa cada alternativa com parágrafos limpos)
+    
+    return formatado;
 }
 
 export function render() {
@@ -146,7 +157,7 @@ export function render() {
             // click botao de confirmar
             const confirm = app.querySelector('#btn-confirmar');
             confirm.addEventListener("click", () => {
-                console.log("confirmou")
+                //console.log("confirmou")
                 //console.log(userState.answers[state.currentIndex])
                 if (choice === null){
                     alert("Escolha ao menos uma alternativa.")
@@ -211,8 +222,8 @@ export function render() {
 
                 });
             
-                console.log(userState.answers)
-                console.log(userState.questionId)
+                //console.log(userState.answers)
+                //console.log(userState.questionId)
             
                 scrollTop();
                 app.innerHTML = `
@@ -248,6 +259,12 @@ export function render() {
                                     <span>Sua resposta: <strong style="color: ${corBordaDetalhe}; font-size: 1.1rem;">${respostaUsuario.toUpperCase()}</strong></span>
                                     <span class="gabarito-badge">Correta: <strong style="color: #4ade80; font-size: 1.1rem;">${qOriginalAtual.correta.toUpperCase()}</strong></span>
                                 </div>
+
+                                <div class="gabarito-comentario" style="margin-top: 15px; padding: 12px; background-color: rgba(255, 255, 255, 0.03); border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                    <strong style="color: #60a5fa; display: block; margin-bottom: 5px;">Gabarito Detalhado:</strong>
+                                    <p style="font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; margin: 0;">${formatarComentario(qOriginalAtual.comentario || "Gabarito detalhado ainda não disponível para esta questão.")}</p>
+                                </div>
+
                             </div>
                         </div>
 

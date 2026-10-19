@@ -12,7 +12,7 @@ export async function loadQuestions(edicao){ // função assincrona para filtrar
         const subjectQuestions = data.questoes.filter(
           q => q.materia === state.subject
         );
-        console.log(`Questões encontradas para ${state.subject}`, subjectQuestions);
+        //console.log(`Questões encontradas para ${state.subject}`, subjectQuestions);
 
         return subjectQuestions; // retorna o array filtrado para usar na tela de QUIZ
     
