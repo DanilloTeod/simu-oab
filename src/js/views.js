@@ -34,18 +34,7 @@ function getHeaderUsuarioHTML() {
         </header>
     `;
 }
-// --- FUNÇÃO AUXILIAR: Configura o evento do botão "Sair" ---
-function bindLogoutEvent(container) {
-    const btnLogout = container.querySelector('#btn-logout');
-    if (btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            localStorage.removeItem('token_oab');
-            localStorage.removeItem('user_name');
-            alert('Você saiu da sua conta.');
-            render();
-        });
-    }
-}
+
 // --- FUNÇÃO AUXILIAR: Gerencia os cliques da Navbar (Login, Cadastrar, Sair) ---
 function bindHeaderEvents(container) {
     const btnLogout = container.querySelector('#btn-logout');
@@ -180,7 +169,7 @@ export function render() {
             </div>
         `;
 
-        bindLogoutEvent(app);
+        bindHeaderEvents(app)
 
         const formLogin = app.querySelector('#login-form');
         const btnGoRegister = app.querySelector('#go-to-register');
@@ -248,7 +237,7 @@ export function render() {
             </div>
         `;
 
-        bindLogoutEvent(app);
+        bindHeaderEvents(app)
 
         const formRegister = app.querySelector('#register-form');
         const btnGoLogin = app.querySelector('#go-to-login');
@@ -289,7 +278,7 @@ export function render() {
                         <p>Não existem questões cadastradas para esta matéria ainda.</p>
                     </div>
                 `;
-                bindLogoutEvent(app);
+                bindHeaderEvents(app)
                 return;
             }
 
@@ -317,7 +306,7 @@ export function render() {
                 </div>
             `;
 
-            bindLogoutEvent(app);
+            bindHeaderEvents(app);
 
             const container = document.getElementById('container-question');
             choice = null;
@@ -470,7 +459,7 @@ export function render() {
                 </div>
             `;
 
-            bindLogoutEvent(app);
+            bindHeadersEvents(app);
 
             const botoesGrid = app.querySelectorAll('.btn-grid-questao');
             botoesGrid.forEach(botao => {

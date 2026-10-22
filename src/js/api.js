@@ -23,7 +23,7 @@ export async function loadQuestions(edicao){ // função assincrona para filtrar
 
 export async function login (email, senha){
     try {
-        const resposta = await fetch('http://127.0.0.1:5000/api/login', {
+        const resposta = await fetch('https://danilloteod.pythonanywhere.com/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email, senha: senha})
@@ -45,7 +45,7 @@ export async function login (email, senha){
 
 export async function cadastrar(nome, email, senha) {
     try {
-        const resposta = await fetch('http://127.0.0.1:5000/api/cadastro', {
+        const resposta = await fetch('https://danilloteod.pythonanywhere.com/api/cadastro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -91,7 +91,7 @@ export async function enviarSimulado (arrayAnswers, correctAnswers, editionSelec
     
     try {
         // envia os dados para o back-end Django em execução local
-        const resposta = await fetch('http://127.0.0.1:5000/api/simulados/salvar', {
+        const resposta = await fetch('https://danilloteod.pythonanywhere.com/api/simulados/salvar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json',
                 // Injeta o token com o prefixo Bearer
