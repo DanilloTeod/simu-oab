@@ -5,6 +5,7 @@ Projeto pessoal de um simulador interativo para a 1ª Fase do Exame de Ordem da 
 Criei esta aplicação com o objetivo de colocar em prática conceitos fundamentais de desenvolvimento web, manipulação do DOM e gestão de estado em JavaScript puro (Vanilla JS), resolvendo um problema real de estudo.
 
 Atualmente disponivel em: https://simu-oab.vercel.app/
+backend disponivel em: https://github.com/DanilloTeod/simu-oab-backend
 ---
 
 ## 🎯 Aspectos do projeto?
