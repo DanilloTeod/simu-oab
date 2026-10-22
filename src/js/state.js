@@ -11,6 +11,8 @@ export const state = {
     currentIndex: 0,
     correctAnswers: 0,
     editionSelected: '47',
-    currentResultIndex: 0
+    currentResultIndex: 0,
+    totalQuestions: 0,
+    arrayAnswers: [],
 };
 

@@ -1,4 +1,6 @@
-/* Definição do Tema Escuro (Cores inspiradas em interfaces modernas) */
+/* =========================================================
+   TEMA E VARIÁVEIS GERAIS
+   ========================================================= */
 :root {
     --bg-main: #0f172a;       /* Fundo principal bem escuro (Azul Noite/Chumbo) */
     --bg-card: #1e293b;       /* Fundo dos cartões (um tom acima para dar contraste) */
@@ -9,53 +11,16 @@
     --primary-hover: #2563eb; /* Azul mais escuro para o hover do botão */
 }
 
-@media (max-width: 768px) {
-    /* Reduz um pouco as margens gerais do body e dos cartões em ecrãs pequenos */
-    body {
-        padding: 10px;
-    }
-
-    .card {
-        padding: 20px 15px !important;
-        width: 100% !important;
-        box-sizing: border-box;
-    }
-
-    .resultado-container-layout {
-        flex-direction: column !important;
-        gap: 15px;
-        display: flex;
-    }
-
-    /* A barra lateral de questões passa a ocupar a largura toda */
-    .sidebar-questoes {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    /* O painel de detalhe adapta-se à largura total */
-    .painel-detalhe {
-        width: 100% !important;
-        box-sizing: border-box;
-    }
-
-    /* Ajusta os botões e títulos para não rebentarem o ecrã */
-    h1 {
-        font-size: 1.5rem !important;
-    }
-
-    .btn-materia, .btn-primary {
-        font-size: 0.95rem;
-        padding: 12px;
-    }
+html {
+    scroll-behavior: smooth;
 }
-/* Reset básico e estrutura central */
+
 body {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -63,22 +28,115 @@ body {
     flex-direction: column;
 }
 
-html {
-  scroll-behavior: smooth;
+/* =========================================================
+   BARRA SUPERIOR (NAVBAR - LOGIN/CADASTRO/USUÁRIO)
+   ========================================================= */
+.top-navbar {
+    width: 100%;
+    max-width: 750px; /* Alinhamento perfeito com o card principal */
+    margin: 0 auto 16px auto;
+    display: flex;
+    justify-content: flex-end; 
+    align-items: center;
 }
 
-/* O Cartão Principal (A "Caixa" do conteúdo) */
+.navbar-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.75);
+    padding: 6px 14px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.user-badge {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+}
+
+.auth-buttons-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-nav-outline {
+    background: transparent;
+    border: 1px solid rgba(59, 130, 246, 0.5);
+    color: #60a5fa;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-nav-outline:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+.btn-nav-filled {
+    background-color: #3b82f6;
+    border: none;
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-nav-filled:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-logout-small {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-logout-small:hover {
+    background-color: rgba(239, 68, 68, 0.3);
+    color: #ffffff;
+}
+
+/* =========================================================
+   ESTRUTURA DOS CARTÕES (CARDS)
+   ========================================================= */
 .card {
-    background-color: #1e293b; /* Tom escuro elegante */
+    background-color: var(--bg-card);
     color: #f1f5f9;
     padding: 32px;
     border-radius: 12px;
-    max-width: 750px; /* Impede que o texto fique demasiado largo para ler */
-    margin: 20px auto;
+    max-width: 750px; 
+    width: 100%;
+    margin: 0 auto;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
 }
 
-/* Títulos e textos */
+.card-result {
+    max-width: 950px !important; 
+    width: 100% !important;
+}
+
+/* =========================================================
+   TÍTULOS E TEXTOS
+   ========================================================= */
 h1 {
     margin-top: 0;
     font-size: 24px;
@@ -91,36 +149,263 @@ p {
 }
 
 .enunciado {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     font-size: 1.1rem;
-    line-height: 1.4; /* O espaçamento entre linhas que elimina a sensação de texto 'amontoado' */
-    color: #e2e8f0; /* Cinzento claro que descansa a vista em vez de branco puro */
+    line-height: 1.4; 
+    color: #e2e8f0; 
     text-align: justify;
-    letter-spacing: 0.01em; /* Leve espaçamento entre letras para nitidez */
+    letter-spacing: 0.01em; 
 }
 
-.gabarito-badge {
-    background: rgba(99, 102, 241, 0.2);
-    color: #818cf8;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-weight: bold;
-    text-transform: uppercase;
+/* =========================================================
+   FORMULÁRIOS, INPUTS E SELECTS (LOGIN, CADASTRO, EDICÃO)
+   ========================================================= */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    text-align: left;
 }
 
-.card-result {
-    max-width: 950px !important; /* Aumenta a largura máxima para o texto respirar */
-    width: 95% !important;
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
 }
 
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.edicao-container {
+    margin: 8px 0 16px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.label-edicao {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+/* Base padrão para qualquer input/select */
+.input-edicao {
+    width: 100%;
+    padding: 12px 14px;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.input-edicao:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background-color: rgba(15, 23, 42, 0.8);
+}
+
+.input-edicao::placeholder {
+    color: #64748b;
+}
+
+/* Seta estilizada APENAS se o elemento for um <select> */
+select.input-edicao {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* =========================================================
+   BOTÕES GERAIS E DISCIPLINAS
+   ========================================================= */
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-full {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-materia {
+    background-color: rgba(15, 23, 42, 0.6);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 15px;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.btn-materia:hover {
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.btn-materia.ativo {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+/* =========================================================
+   ESTILOS DO QUIZ (ALTERNATIVAS)
+   ========================================================= */
 .container-alternativas {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Espaçamento vertical limpo e equilibrado entre as opções */
+    gap: 12px;
     margin-top: 24px;
     text-align: left;
 }
 
+.btn-alternativa {
+    background-color: #2a3447; 
+    color: #f1f5f9;
+    border: 1px solid #3b465f;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+}
+
+.btn-alternativa strong {
+    color: #60a5fa;
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+.btn-alternativa:hover {
+    background-color: #3b465f;
+    border-color: #60a5fa;
+}
+
+.btn-alternativa.ativo {
+    border-color: var(--primary);
+    background-color: rgba(18, 28, 218, 0.2);
+    box-shadow: 0 0 10px rgba(19, 89, 201, 0.866);
+}
+
+/* =========================================================
+   ESTILOS DOS RESULTADOS (GRID E DETALHES)
+   ========================================================= */
+.concluido {
+    font-size: 1.2rem; 
+    margin: 20px 0;
+    color: var(--text-main);
+}
+
+.resultado-container-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+}
+
+.sidebar-questoes {
+    width: 280px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.sidebar-titulo {
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.grid-botoes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.btn-grid-questao {
+    aspect-ratio: 1; 
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-grid-questao:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-grid-questao.ativo {
+    border: 2px solid #3b82f6;
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+.painel-detalhe {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
 .gabarito-enunciado {
     font-size: 1rem;
@@ -140,7 +425,7 @@ p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.3); /* Fundo contrastante para destacar a zona de respostas */
+    background-color: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 12px 18px;
@@ -148,249 +433,152 @@ p {
     font-size: 0.95rem;
 }
 
-/* efeito ao passar o mouse em cima */
-.btn-alternativa:hover {
-    background-color: #3b465f;
-    border-color: #60a5fa; /* Toque subtil de azul moderno */
-}
-
-/* Destaca a letra (A., B., C., D.) para facilitar a leitura rápida */
-.btn-alternativa strong {
-    color: #60a5fa;
-    margin-right: 8px;
-    font-weight: 600;
-}
-.btn-alternativa {
-    background-color: #2a3447; /* Tom ligeiramente mais claro que o card para criar contraste */
-    color: #f1f5f9;
-    border: 1px solid #3b465f;
-    border-radius: 8px;
-    padding: 14px 18px;
-    font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    display: flex;
-    align-items: flex-start;
-}
-
-/* Botão Principal (Ex: Iniciar, Tentar Novamente) */
-.btn-primary {
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 14px 20px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    transition: background-color 0.2s ease;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-}
-
-/* Botões das Alternativas */
-.btn-materia {
-    background-color: rgba(15, 23, 42, 0.6);
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 14px 16px;
-    font-size: 15px;
-    text-align: left;
-    width: 100%;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: block;
-}
-
-/* Efeito de hover (quando passa o mouse) */
-.btn-materia:hover {
-    border-color: var(--primary);
-    background-color: rgba(59, 130, 246, 0.1);
-}
-
-/* ESTADO SELECIONADO: Quando o JS adiciona a classe .ativo */
-.btn-alternativa.ativo {
-    border-color: var(--primary);
-    background-color: rgba(18, 28, 218, 0.2);
-    box-shadow: 0 0 10px rgba(19, 89, 201, 0.866);
-}
-
-.btn-materia.ativo {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border-color: var(--primary);
-    background-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
-}
-
-.concluido {
-    font-size: 1.2rem; margin: 20px 0;
-    color: var(--text-main);
-}
-
-/* Layout geral da tela de resultado em 2 colunas */
-.resultado-container-layout {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    text-align: left;
-    width: 100%;
-}
-
-/* Caixa lateral esquerda (a grelha) */
-.sidebar-questoes {
-    width: 280px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 16px;
-    box-sizing: border-box;
-}
-
-.sidebar-titulo {
-    font-size: 0.95rem;
-    font-weight: bold;
-    margin-bottom: 12px;
-    color: #fff;
-}
-
-/* A grelha em si (os quadradinhos) */
-.grid-botoes {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 5 quadradinhos por linha */
-    gap: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-/* O estilo de cada quadradinho numerado */
-.btn-grid-questao {
-    aspect-ratio: 1; /* Torna o botão num quadrado perfeito */
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+.gabarito-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    padding: 2px 8px;
     border-radius: 6px;
-    color: #fff;
     font-weight: bold;
-    font-size: 0.85rem;
-    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* =========================================================
+   LINKS E RODAPÉS DE FORMULÁRIOS
+   ========================================================= */
+.card-subtitle {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: -8px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.form-footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.9rem;
+    color: #94a3b8;
 }
 
-.btn-grid-questao:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+.btn-link {
+    background: none;
+    border: none;
+    color: #60a5fa;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: color 0.2s;
 }
 
-/* Estilo para quando o quadradinho é o selecionado atualmente (borda azul igual à imagem) */
-.btn-grid-questao.ativo {
-    border: 2px solid #3b82f6;
-    background-color: rgba(59, 130, 246, 0.15);
+.btn-link:hover {
+    color: #93c5fd;
 }
 
-/* Painel da direita onde aparece a questão detalhada */
-.painel-detalhe {
-    flex: 1;
-    background-color: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 20px;
-    box-sizing: border-box;
+.btn-link-secundary {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
-/* O #app vai crescer para empurrar o rodapé para o fundo */
-#app {
-    flex: 1;
+.btn-link-secundary:hover {
+    color: #cbd5e1;
 }
 
+/* =========================================================
+   MEDIA QUERIES (RESPONSIVIDADE PARA CELULAR)
+   ========================================================= */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .top-navbar {
+        max-width: 100%;
+        justify-content: center; /* Centraliza a navbar no celular */
+    }
+
+    .card {
+        padding: 20px 15px !important;
+        width: 100% !important;
+    }
+
+    .resultado-container-layout {
+        flex-direction: column !important;
+        gap: 15px;
+        display: flex;
+    }
+
+    .sidebar-questoes {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .painel-detalhe {
+        width: 100% !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .btn-materia, .btn-primary {
+        font-size: 0.95rem;
+        padding: 12px;
+    }
+}
+/* =========================================================
+   RODAPÉ (FOOTER)
+   ========================================================= */
 .rodape-site {
     text-align: center;
-    padding: 20px 10px;
-    margin-top: auto; /* Empurra o rodapé para o fim do container */
+    width: 100%;
+    padding: 30px 15px;
+    margin-top: 40px; /* Cria um espaço respirável abaixo do card */
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5); /* Cinzento discreto */
+    box-sizing: border-box;
 }
 
 .rodape-site p {
-    margin: 4px 0;
+    margin: 6px 0;
+    line-height: 1.5;
 }
 
 .rodape-site strong {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.8);
 }
 
-.edicao {
-    width: 100%;
-    padding: 12px 16px;
-    background-color: #1e293b;
-    color: #f8fafc;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    font-size: 1rem;
-    outline: none;
+/* Ajuste e efeito para o ícone do GitHub (seja SVG, <img> ou FontAwesome) */
+.rodape-site img, 
+.rodape-site svg, 
+.rodape-site i {
+    display: inline-block;
+    margin-top: 12px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    width: 24px; /* Tamanho padronizado */
+    height: 24px;
 }
 
-.edicao:focus {
-    border-color: #3b82f6;
-}
-.edicao-container {
-    margin: 8px 0 16px 0;
-    width: 100%;
-    text-align: left;
+.rodape-site a {
+    color: inherit;
+    text-decoration: none;
 }
 
-.label-edicao {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #94a3b8;
-    margin-bottom: 6px;
-}
-
-.input-edicao {
-    width: 100%;
-    padding: 12px 16px;
-    background-color: #111827; /* Mesmo tom escuro dos botões */
-    color: #f8fafc;
-    border: 1px solid #1e293b; /* Mesma borda sutil */
-    border-radius: 8px; /* Mesmos cantos arredondados */
-    font-size: 0.95rem;
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-    
-    /* Centralização perfeita e seta customizada moderna */
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
-    padding-right: 40px; /* Garante que o texto longo não encoste na seta */
-}
-
-.input-edicao:hover {
-    border-color: #3b82f6;
-    background-color: #1e293b; /* Efeito hover igual aos botões de cima */
-}
-
-.input-edicao:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.rodape-site a:hover img, 
+.rodape-site a:hover svg, 
+.rodape-site a:hover i {
+    opacity: 1; /* Acende o ícone ao passar o rato */
+    transform: translateY(-2px); /* Levanta ligeiramente o ícone */
 }
