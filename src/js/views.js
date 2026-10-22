@@ -459,7 +459,7 @@ export function render() {
                 </div>
             `;
 
-            bindHeadersEvents(app);
+            bindHeaderEvents(app);
 
             const botoesGrid = app.querySelectorAll('.btn-grid-questao');
             botoesGrid.forEach(botao => {
