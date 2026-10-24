@@ -1,38 +1,83 @@
-# ⚖️ Simulado OAB — 1ª Fase
+# Simulado OAB — 1ª Fase
 
-Projeto pessoal de um simulador interativo para a 1ª Fase do Exame de Ordem da OAB. 
+Aplicação web para praticar questões da 1ª fase do Exame de Ordem da OAB. O projeto usa JavaScript puro, módulos ES e Vite. As questões são carregadas de arquivos JSON estáticos; cadastro, login e salvamento de resultados são integrados à API Flask do [backend](https://github.com/DanilloTeod/simu-oab-backend).
 
-Criei esta aplicação com o objetivo de colocar em prática conceitos fundamentais de desenvolvimento web, manipulação do DOM e gestão de estado em JavaScript puro (Vanilla JS), resolvendo um problema real de estudo.
+- **Aplicação publicada:** [simu-oab.vercel.app](https://simu-oab.vercel.app/)
+- **Backend publicado:** `https://danilloteod.pythonanywhere.com`
 
-Atualmente disponivel em: https://simu-oab.vercel.app/
-backend disponivel em: https://github.com/DanilloTeod/simu-oab-backend
----
+## Funcionalidades
 
-## 🎯 Aspectos do projeto?
+- Seleção de matéria e edição do exame.
+- Resolução de questões e visualização do resultado.
+- Cadastro e login de estudantes.
+- Salvamento do resultado e das respostas no backend para usuários autenticados.
+- Layout responsivo e interface construída sem frameworks de frontend.
 
-1. **Lógica de estado dinâmico**: Gerir o fluxo entre a escolha da matéria, a exibição das questões e a tela final sem depender de frameworks como React ou Vue.
-2. **Requisições assíncronas**: Consumir as questões via `fetch` simulando uma API real.
-3. **Navegação por Dashboard no Resultado**: Em vez de uma lista estática gigante, criei uma interface em duas colunas onde o utilizador clica na questão da grelha e vê o detalhe exato do lado direito.
+## Tecnologias
 
----
+- HTML5 e CSS3.
+- JavaScript (ES modules) e Fetch API.
+- Vite para desenvolvimento e build.
+- API Flask, SQLite e JWT para autenticação e persistência dos resultados.
 
-## 🛠️ O que utilizei
+## Executar localmente
 
-- **HTML5 & CSS3**: Flexbox e CSS Grid para o layout responsivo do Dashboard.
-- **JavaScript (ES6+)**:
-  - Módulos nativos (`import` / `export`) para organizar o código.
-  - Arquitetura baseada em renderização por estado (`state.js` e `views.js`).
-  - Consumo de dados com `Promises` e `Fetch API` (`api.js`).
+Requer Node.js e npm. Na raiz do frontend:
 
----
+```bash
+npm install
+npm run dev
+```
 
-## 📁 Estrutura dos ficheiros
+O Vite informa no terminal o endereço local para abrir no navegador.
+
+Para gerar e visualizar a versão de produção:
+
+```bash
+npm run build
+npm run preview
+```
+
+## Integração com o backend
+
+O cliente HTTP do frontend está em [`src/js/api.js`](src/js/api.js). Atualmente, as chamadas de cadastro, login e salvamento usam diretamente o backend publicado:
+
+| Ação | Endpoint | Autenticação |
+| --- | --- | --- |
+| Criar conta | `POST /api/cadastro` | Não |
+| Entrar | `POST /api/login` | Não |
+| Salvar resultado do simulado | `POST /api/simulados/salvar` | JWT Bearer |
+
+O login guarda o token JWT em `localStorage` na chave `token_oab` e o nome do estudante em `user_name`. O token é enviado no cabeçalho `Authorization: Bearer <token>` ao salvar um resultado. A API expira tokens após uma hora. O frontend não consulta nem exibe um histórico de resultados persistidos neste momento.
+
+Para executar a API localmente, siga as instruções no [README do backend](https://github.com/DanilloTeod/simu-oab-backend). **Atenção:** o endereço da API está escrito diretamente em `src/js/api.js`; iniciar o backend localmente não redireciona automaticamente as chamadas. Para desenvolvimento local, troque temporariamente a base das chamadas para `http://127.0.0.1:5000`. O backend precisa estar com CORS habilitado para a origem local do Vite.
+
+O cadastro não autentica automaticamente: depois de criar a conta, entre usando o formulário de login.
+
+## Questões
+
+As questões não são obtidas pela API. Os arquivos ficam em `public/data/` e são requisitados pelo navegador com o caminho:
 
 ```text
-├── index.html       # Ponto de entrada da aplicação (#app)
-├── style.css        # Estilos globais e layout do Dashboard
-├── main.js          # Arranque da aplicação
-├── state.js         # Memória do app (respostas do utilizador, ecrã atual)
-├── timer.js         # Cronômetro (em desenvolvimento)
-├── api.js           # Carregamento assíncrono das questões
-└── views.js         # Lógica visual e renderização dos ecrãs (Home, Quiz, Result)
+/data/questoes_oab_<edição>_tipo1.json
+```
+
+O formato esperado é um objeto JSON com a propriedade `questoes` contendo uma lista de questões. O frontend filtra essa lista pela matéria selecionada. Para adicionar ou atualizar uma edição, disponibilize o arquivo correspondente nessa pasta.
+
+## Estrutura principal
+
+```text
+├── public/
+│   └── data/             # Questões em JSON por edição
+├── src/
+│   ├── assets/           # Ícones e imagens
+│   └── js/
+│       ├── api.js        # Questões e chamadas ao backend
+│       ├── main.js       # Inicialização da aplicação
+│       ├── state.js      # Estado do simulado
+│       ├── timer.js      # Lógica de cronômetro
+│       └── views.js      # Renderização das telas e eventos
+├── index.html
+├── style.css
+└── package.json
+```
