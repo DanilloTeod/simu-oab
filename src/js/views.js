@@ -1,5 +1,16 @@
 import { userState, state } from "./state.js";
-import { loadQuestions, enviarSimulado, login, cadastrar } from "./api.js";
+import {
+    loadQuestions,
+    loadEditionQuestions,
+    enviarSimulado,
+    login,
+    cadastrar,
+    historico,
+    carregarPainelAdmin,
+    atualizarPresenca
+} from "./api.js";
+
+let adminRefreshTimer = null;
 
 function scrollTop() {
     window.scrollTo({
@@ -8,22 +19,394 @@ function scrollTop() {
     });
 }
 
+function resetarTentativa() {
+    state.currentIndex = 0;
+    state.correctAnswers = 0;
+    state.currentResultIndex = 0;
+    state.arrayAnswers = [];
+    userState.correctAnswers = 0;
+    userState.questionId = [];
+    userState.answers = [];
+}
+
 function formatarComentario(texto) {
-    if (!texto) return "Comentário não disponível.";
-    let formatado = texto.replace(/(A alternativa [A-D] está)/gi, '<br><br><strong>$1</strong>');
+    if (!texto) return "Gabarito não disponível.";
+    let formatado = escaparHTML(texto).replace(/(A alternativa [A-D] está)/gi, '<br><br><strong>$1</strong>');
     return formatado;
 }
+
+function escaparHTML(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, caractere => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[caractere]);
+}
+
+function formatarDataHistorico(data) {
+    if (!data) return 'Data indisponível';
+
+    const dataConvertida = new Date(data);
+    if (Number.isNaN(dataConvertida.getTime())) return 'Data indisponível';
+
+    return dataConvertida.toLocaleString('pt-BR', {
+        dateStyle: 'long',
+        timeStyle: 'short'
+    });
+}
+
+function formatarMateria(materia) {
+    const materias = {
+        etica: 'Ética Profissional',
+        constitucional: 'Direito Constitucional',
+        civil: 'Direito Civil',
+        processualcivil: 'Direito Processual Civil',
+        penal: 'Direito Penal',
+        processualpenal: 'Direito Processual Penal'
+    };
+
+    return materias[materia] || materia;
+}
+
+function renderQuestaoHistorico(resposta, questoes, numeroQuestao, edicao) {
+    const questao = questoes.find(item =>
+        Number(item.id) === Number(resposta.question_id) &&
+        (!resposta.subject || item.materia === resposta.subject)
+    );
+    const alternativaMarcada = String(resposta.selected_option || '').toLowerCase();
+    const gabarito = String(questao?.correta || '').toLowerCase();
+    const acertou = gabarito
+        ? alternativaMarcada === gabarito
+        : Boolean(resposta.is_correct);
+    const status = gabarito
+        ? (acertou ? 'history-status-correct' : 'history-status-incorrect')
+        : 'history-status-unknown';
+    const textoStatus = gabarito
+        ? (acertou ? 'Acertou' : 'Errou')
+        : 'Gabarito indisponível';
+
+    let alternativasHTML = '';
+    if (questao?.alternativas) {
+        alternativasHTML = Object.entries(questao.alternativas).map(([letra, texto]) => {
+            const classes = ['history-option'];
+            if (letra === gabarito) classes.push('history-option-correct');
+            if (letra === alternativaMarcada) classes.push('history-option-selected');
+
+            return `
+                <div class="${classes.join(' ')}">
+                    <strong>${escaparHTML(letra.toUpperCase())}.</strong>
+                    ${escaparHTML(texto)}
+                    ${letra === alternativaMarcada ? '<span>Sua resposta</span>' : ''}
+                    ${letra === gabarito ? '<span>Gabarito</span>' : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    return `
+        <details class="history-question">
+            <summary>
+                <span>Questão ${numeroQuestao}</span>
+                <span class="history-question-status ${status}">${textoStatus}</span>
+            </summary>
+            <div class="history-question-content">
+                ${questao
+                    ? `<p class="history-question-id">${escaparHTML(edicao)}º Exame OAB · Questão original ${escaparHTML(questao.id)} <span>(questão ${numeroQuestao} deste simulado)</span></p>
+                       <p class="history-enunciado">${escaparHTML(questao.enunciado)}</p>
+                       <div class="history-options">${alternativasHTML}</div>
+                       <div class="history-answer-line">
+                           <span>Sua resposta: <strong>${escaparHTML(alternativaMarcada.toUpperCase() || '—')}</strong></span>
+                           <span>Gabarito: <strong>${escaparHTML(gabarito.toUpperCase() || '—')}</strong></span>
+                       </div>
+                       <div class="history-comment">
+                           <strong>Comentário</strong>
+                           <p>${formatarComentario(questao.comentario)}</p>
+                       </div>`
+                    : `<p class="history-question-id">Questão original ${escaparHTML(resposta.question_id)} <span>(questão ${numeroQuestao} deste simulado)</span></p>
+                       <p class="history-unavailable">Não foi possível carregar o enunciado e o gabarito desta questão.</p>
+                       <div class="history-answer-line">
+                           <span>Sua resposta: <strong>${escaparHTML(alternativaMarcada.toUpperCase() || '—')}</strong></span>
+                       </div>`
+                }
+            </div>
+        </details>
+    `;
+}
+
+function renderSimuladoHistorico(simulado, questoes) {
+    const respostas = Array.isArray(simulado.answers) ? simulado.answers : [];
+    const edicao = simulado.edition ?? simulado.edicao;
+    const acertos = simulado.score ?? simulado.questoes_corretas;
+    const total = simulado.total_questions ?? simulado.questoes_totais;
+    const materias = [...new Set(respostas.map(resposta => resposta.subject).filter(Boolean))];
+    const materiasTexto = materias.length
+        ? materias.map(formatarMateria).join(' · ')
+        : 'Matéria não identificada';
+
+    return `
+        <details class="history-run">
+            <summary class="history-run-summary">
+                <span class="history-run-summary-main">
+                    <span class="history-run-label">Simulado ${escaparHTML(simulado.id)}</span>
+                    <span class="history-run-title">${escaparHTML(edicao)}º Exame de Ordem</span>
+                    <span class="history-run-subject">${escaparHTML(materiasTexto)}</span>
+                    <span class="history-run-date">${escaparHTML(formatarDataHistorico(simulado.submitted_at ?? simulado.data_envio))}</span>
+                </span>
+                <span class="history-run-summary-meta">
+                    <span class="history-score">
+                    <strong>${escaparHTML(acertos)} / ${escaparHTML(total)}</strong>
+                    <span>acertos</span>
+                    </span>
+                    <span class="history-run-toggle">
+                        <span class="history-run-open-label">Ver questões</span>
+                        <span class="history-run-close-label">Ocultar questões</span>
+                    </span>
+                </span>
+            </summary>
+            <div class="history-run-content">
+                <div class="history-questions">
+                    ${respostas.length
+                        ? respostas.map((resposta, index) =>
+                            renderQuestaoHistorico(resposta, questoes, index + 1, edicao)
+                        ).join('')
+                        : '<p class="history-unavailable">Este simulado não possui respostas registradas.</p>'
+                    }
+                </div>
+            </div>
+        </details>
+    `;
+}
+
+async function renderTelaHistorico(app, headerHTML) {
+    app.innerHTML = `
+        ${headerHTML}
+        <section class="card history-card">
+            <div class="history-heading">
+                <div>
+                    <h1>Histórico de simulados</h1>
+                    <p class="card-subtitle">Acompanhe seus resultados e revise as questões respondidas.</p>
+                </div>
+                <button id="btn-history-home" class="btn-nav-outline">← Início</button>
+            </div>
+            <p class="history-loading" role="status">Carregando seu histórico...</p>
+        </section>
+    `;
+    bindHeaderEvents(app);
+
+    try {
+        const simulados = await historico();
+        if (state.screen !== 'HISTORY') return;
+
+        const edicoes = [...new Set(simulados.map(simulado => String(simulado.edition)))];
+        const bancos = await Promise.all(edicoes.map(async edicao => {
+            try {
+                return [edicao, await loadEditionQuestions(edicao)];
+            } catch (erro) {
+                console.error(`Erro ao carregar as questões do Exame ${edicao}:`, erro);
+                return [edicao, []];
+            }
+        }));
+        const questoesPorEdicao = new Map(bancos);
+
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card card-result history-card">
+                <div class="history-heading">
+                    <div>
+                        <h1>Histórico de simulados</h1>
+                        <p class="card-subtitle">Seus resultados e a revisão das questões respondidas.</p>
+                    </div>
+                    <div class="history-heading-actions">
+                        <button id="btn-history-home" class="btn-nav-outline">← Início</button>
+                        <span class="history-count">${simulados.length} ${simulados.length === 1 ? 'simulado' : 'simulados'}</span>
+                    </div>
+                </div>
+                ${simulados.length
+                    ? `<div class="history-runs">
+                           ${simulados.map(simulado => renderSimuladoHistorico(
+                               simulado,
+                               questoesPorEdicao.get(String(simulado.edition)) || []
+                           )).join('')}
+                       </div>`
+                    : '<div class="history-empty"><strong>Nenhum simulado salvo ainda.</strong><p>Quando você concluir um simulado conectado à sua conta, ele aparecerá aqui.</p></div>'
+                }
+            </section>
+        `;
+        bindHeaderEvents(app);
+        scrollTop();
+    } catch (erro) {
+        if (state.screen !== 'HISTORY') return;
+
+        if (!localStorage.getItem('token_oab')) {
+            state.screen = 'LOGIN';
+            render();
+            return;
+        }
+
+        console.error('Erro ao carregar o histórico:', erro);
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card history-card history-error">
+                <div class="history-heading">
+                    <h1>Não foi possível carregar o histórico</h1>
+                    <button id="btn-history-home" class="btn-nav-outline">← Início</button>
+                </div>
+                <p>${escaparHTML(erro.message || 'Tente novamente em alguns instantes.')}</p>
+                <button id="btn-retry-history" class="btn-primary">Tentar novamente</button>
+            </section>
+        `;
+        bindHeaderEvents(app);
+        app.querySelector('#btn-retry-history').addEventListener('click', render);
+    }
+}
+
+function formatarResumoMaterias(respostas) {
+    const materias = [...new Set(
+        (Array.isArray(respostas) ? respostas : [])
+            .map(resposta => resposta.subject)
+            .filter(Boolean)
+    )];
+    return materias.length
+        ? materias.map(formatarMateria).join(' · ')
+        : 'Matéria não identificada';
+}
+
+function renderSimuladoAdmin(simulado) {
+    const respostas = Array.isArray(simulado.answers) ? simulado.answers : [];
+    return `
+        <details class="admin-simulation">
+            <summary>
+                <span>${escaparHTML(simulado.edition)}º Exame · ${escaparHTML(formatarDataHistorico(simulado.submitted_at))}</span>
+                <strong>${escaparHTML(simulado.score)} / ${escaparHTML(simulado.total_questions)}</strong>
+            </summary>
+            <div class="admin-simulation-content">
+                <p>${escaparHTML(formatarResumoMaterias(respostas))}</p>
+                <div class="admin-answer-list">
+                    ${respostas.map((resposta, index) => `
+                        <div class="admin-answer-row">
+                            <span>Questão ${index + 1} <small>(original ${escaparHTML(resposta.question_id)})</small></span>
+                            <span>Marcada: <strong>${escaparHTML(String(resposta.selected_option || '—').toUpperCase())}</strong></span>
+                            <span class="${resposta.is_correct ? 'history-status-correct' : 'history-status-incorrect'}">
+                                ${resposta.is_correct ? 'Acertou' : 'Errou'}
+                            </span>
+                        </div>
+                    `).join('') || '<p class="history-unavailable">Sem respostas registradas.</p>'}
+                </div>
+            </div>
+        </details>
+    `;
+}
+
+async function renderTelaAdmin(app, headerHTML) {
+    app.innerHTML = `
+        ${headerHTML}
+        <section class="card card-result admin-card">
+            <div class="history-heading">
+                <div>
+                    <h1>Painel administrativo</h1>
+                    <p class="card-subtitle">Acompanhamento de alunos, simulados e atividade recente.</p>
+                </div>
+                <button id="btn-admin-home" class="btn-nav-outline">← Início</button>
+            </div>
+            <p class="history-loading" role="status">Carregando dados administrativos...</p>
+        </section>
+    `;
+    bindHeaderEvents(app);
+
+    try {
+        const painel = await carregarPainelAdmin();
+        if (state.screen !== 'ADMIN') return;
+
+        const resumo = painel.summary;
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card card-result admin-card">
+                <div class="history-heading">
+                    <div>
+                        <h1>Painel administrativo</h1>
+                        <p class="card-subtitle">Acompanhamento de alunos, simulados e atividade recente.</p>
+                    </div>
+                    <div class="history-heading-actions">
+                        <button id="btn-admin-home" class="btn-nav-outline">← Início</button>
+                        <button id="btn-admin-refresh" class="btn-nav-outline">Atualizar</button>
+                    </div>
+                </div>
+                <p class="admin-online-note">Online = atividade nos últimos ${Math.round(resumo.online_window_seconds / 60)} minutos. Contagens atualizadas automaticamente.</p>
+                <div class="admin-stats">
+                    <article class="admin-stat"><span>Alunos cadastrados</span><strong>${escaparHTML(resumo.total_students)}</strong></article>
+                    <article class="admin-stat"><span>Simulados realizados</span><strong>${escaparHTML(resumo.total_simulations)}</strong></article>
+                    <article class="admin-stat admin-stat-online-total"><span>Total online</span><strong>${escaparHTML(resumo.online_total)}</strong></article>
+                    <article class="admin-stat admin-stat-online"><span>Alunos logados online</span><strong>${escaparHTML(resumo.online_students)}</strong></article>
+                    <article class="admin-stat admin-stat-anonymous"><span>Anônimos online</span><strong>${escaparHTML(resumo.online_anonymous)}</strong></article>
+                </div>
+                <div class="admin-students-heading">
+                    <h2>Alunos</h2>
+                    <span>${painel.students.length} cadastrados</span>
+                </div>
+                ${painel.students.length
+                    ? `<div class="admin-student-list">
+                           ${painel.students.map(estudante => `
+                               <details class="admin-student">
+                                   <summary>
+                                       <span class="admin-student-identity">
+                                           <strong>${escaparHTML(estudante.name)}</strong>
+                                           <span>${escaparHTML(estudante.email)}</span>
+                                       </span>
+                                       <span class="admin-student-count">${estudante.simulations.length} simulados</span>
+                                   </summary>
+                                   <div class="admin-student-content">
+                                       ${estudante.simulations.map(renderSimuladoAdmin).join('') ||
+                                           '<p class="history-unavailable">Este aluno ainda não realizou simulados.</p>'}
+                                   </div>
+                               </details>
+                           `).join('')}
+                       </div>`
+                    : '<div class="history-empty">Nenhum aluno cadastrado.</div>'
+                }
+            </section>
+        `;
+        bindHeaderEvents(app);
+        app.querySelector('#btn-admin-refresh').addEventListener('click', render);
+        adminRefreshTimer = window.setTimeout(render, 30_000);
+    } catch (erro) {
+        if (state.screen !== 'ADMIN') return;
+        console.error('Erro ao carregar painel administrativo:', erro);
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card admin-card history-error">
+                <div class="history-heading">
+                    <h1>Painel administrativo indisponível</h1>
+                    <button id="btn-admin-home" class="btn-nav-outline">← Início</button>
+                </div>
+                <p>${escaparHTML(erro.message || 'Não foi possível carregar os dados.')}</p>
+                <button id="btn-admin-retry" class="btn-primary">Tentar novamente</button>
+            </section>
+        `;
+        bindHeaderEvents(app);
+        app.querySelector('#btn-admin-retry').addEventListener('click', render);
+    }
+}
+
 // --- FUNÇÃO AUXILIAR: Gera a Navbar discreta no topo direito ---
 function getHeaderUsuarioHTML() {
-    const nomeUsuario = localStorage.getItem('user_name') || 'Anônimo';
-    const estaLogado = Boolean(localStorage.getItem('user_name'));
+    const estaLogado = Boolean(localStorage.getItem('token_oab'));
+    const nomeUsuario = estaLogado
+        ? (localStorage.getItem('user_name') || 'Estudante')
+        : 'Anônimo';
 
     return `
         <header class="top-navbar">
             <div class="navbar-content">
-                <span class="user-badge">👤 <strong>${nomeUsuario}</strong></span>
+                <span class="user-badge">👤 <strong>${escaparHTML(nomeUsuario)}</strong></span>
                 <div class="auth-buttons-header">
                     ${estaLogado ? `
+                        <button id="btn-dashboard" class="btn-nav-filled ${state.screen === 'HISTORY' ? 'is-active' : ''}" title="Histórico de Simulados" ${state.screen === 'HISTORY' ? 'aria-current="page"' : ''}>Histórico</button>
+                        ${localStorage.getItem('is_admin') === 'true'
+                            ? `<button id="btn-admin-nav" class="btn-nav-outline ${state.screen === 'ADMIN' ? 'is-active' : ''}" ${state.screen === 'ADMIN' ? 'aria-current="page"' : ''}>Admin</button>`
+                            : ''
+                        }
                         <button id="btn-logout" class="btn-logout-small" title="Sair da conta">Sair</button>
                     ` : `
                         <button id="btn-login-nav" class="btn-nav-outline">Login</button>
@@ -40,12 +423,48 @@ function bindHeaderEvents(container) {
     const btnLogout = container.querySelector('#btn-logout');
     const btnLogin = container.querySelector('#btn-login-nav');
     const btnRegister = container.querySelector('#btn-register-nav');
+    const btnDashboard = container.querySelector('#btn-dashboard');
+    const btnAdmin = container.querySelector('#btn-admin-nav');
+    const btnAdminHome = container.querySelector('#btn-admin-home');
+    const btnHistoryHome = container.querySelector('#btn-history-home');
 
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
             localStorage.removeItem('token_oab');
             localStorage.removeItem('user_name');
+            localStorage.removeItem('is_admin');
+            atualizarPresenca().catch(erro => {
+                console.error('Erro ao atualizar presença após sair:', erro);
+            });
             alert('Você saiu da sua conta.');
+            render();
+        });
+    }
+
+    if (btnDashboard){
+        btnDashboard.addEventListener('click', () => {
+            state.screen = 'HISTORY';
+            render();
+        });
+    }
+
+    if (btnAdmin) {
+        btnAdmin.addEventListener('click', () => {
+            state.screen = 'ADMIN';
+            render();
+        });
+    }
+
+    if (btnAdminHome) {
+        btnAdminHome.addEventListener('click', () => {
+            state.screen = 'HOME';
+            render();
+        });
+    }
+
+    if (btnHistoryHome) {
+        btnHistoryHome.addEventListener('click', () => {
+            state.screen = 'HOME';
             render();
         });
     }
@@ -66,8 +485,13 @@ function bindHeaderEvents(container) {
 }
 
 export function render() {
+    if (adminRefreshTimer !== null) {
+        window.clearTimeout(adminRefreshTimer);
+        adminRefreshTimer = null;
+    }
     let choice = null;
     const app = document.getElementById('app');
+    app.classList.toggle('history-screen', state.screen === 'HISTORY' || state.screen === 'ADMIN');
     const headerHTML = getHeaderUsuarioHTML();
 
     // --- TELA: HOME ---
@@ -129,6 +553,7 @@ export function render() {
             if (state.subject === null) {
                 alert("Escolha ao menos uma Disciplina!");
             } else {
+                resetarTentativa();
                 state.screen = 'QUIZ';
                 render();
             }
@@ -265,6 +690,22 @@ export function render() {
                 render();
             }
         });
+    }
+    else if (state.screen === 'HISTORY') {
+        if (!localStorage.getItem('token_oab')) {
+            state.screen = 'LOGIN';
+            render();
+            return;
+        }
+        renderTelaHistorico(app, headerHTML);
+    }
+    else if (state.screen === 'ADMIN') {
+        if (localStorage.getItem('is_admin') !== 'true') {
+            state.screen = 'HOME';
+            render();
+            return;
+        }
+        renderTelaAdmin(app, headerHTML);
     }
 
     // --- TELA: QUIZ ---
@@ -474,13 +915,7 @@ export function render() {
             btnReiniciar.addEventListener('click', () => {
                 state.screen = "HOME";
                 state.subject = null;
-                state.currentIndex = 0;
-                state.correctAnswers = 0;
-                state.currentResultIndex = 0;
-
-                userState.correctAnswers = 0;
-                userState.questionId = [];
-                userState.answers = [];
+                resetarTentativa();
                 render();
             });
         });
