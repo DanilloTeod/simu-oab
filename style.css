@@ -599,24 +599,10 @@ body {
     font-size: 0.85rem;
 }
 
-.admin-answer-list {
+.admin-question-list {
     display: grid;
-    gap: 6px;
-}
-
-.admin-answer-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 12px;
-    padding: 9px 10px;
-    border-radius: 7px;
-    background: rgba(255, 255, 255, 0.035);
-    color: #cbd5e1;
-    font-size: 0.82rem;
-}
-
-.admin-answer-row small {
-    color: #64748b;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
 }
 
 /* =========================================================
@@ -1109,14 +1095,6 @@ select.input-edicao {
     .admin-simulation > summary {
         align-items: flex-start;
         padding: 12px;
-    }
-
-    .admin-answer-row {
-        grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .admin-answer-row > :last-child {
-        grid-column: 1 / -1;
     }
 
     .painel-detalhe {
