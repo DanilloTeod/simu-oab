@@ -273,7 +273,7 @@ function formatarResumoMaterias(respostas) {
         : 'Matéria não identificada';
 }
 
-function renderSimuladoAdmin(simulado) {
+function renderSimuladoAdmin(simulado, questoes) {
     const respostas = Array.isArray(simulado.answers) ? simulado.answers : [];
     return `
         <details class="admin-simulation">
@@ -283,16 +283,10 @@ function renderSimuladoAdmin(simulado) {
             </summary>
             <div class="admin-simulation-content">
                 <p>${escaparHTML(formatarResumoMaterias(respostas))}</p>
-                <div class="admin-answer-list">
-                    ${respostas.map((resposta, index) => `
-                        <div class="admin-answer-row">
-                            <span>Questão ${index + 1} <small>(original ${escaparHTML(resposta.question_id)})</small></span>
-                            <span>Marcada: <strong>${escaparHTML(String(resposta.selected_option || '—').toUpperCase())}</strong></span>
-                            <span class="${resposta.is_correct ? 'history-status-correct' : 'history-status-incorrect'}">
-                                ${resposta.is_correct ? 'Acertou' : 'Errou'}
-                            </span>
-                        </div>
-                    `).join('') || '<p class="history-unavailable">Sem respostas registradas.</p>'}
+                <div class="admin-question-list">
+                    ${respostas.map((resposta, index) =>
+                        renderQuestaoHistorico(resposta, questoes, index + 1, simulado.edition)
+                    ).join('') || '<p class="history-unavailable">Sem respostas registradas.</p>'}
                 </div>
             </div>
         </details>
@@ -359,6 +353,22 @@ async function renderTelaAdmin(app, headerHTML) {
         const painel = await carregarPainelAdmin();
         if (state.screen !== 'ADMIN') return;
 
+        const edicoes = [...new Set(
+            painel.students.flatMap(estudante =>
+                estudante.simulations.map(simulado => String(simulado.edition))
+            )
+        )];
+        const bancos = await Promise.all(edicoes.map(async edicao => {
+            try {
+                return [edicao, await loadEditionQuestions(edicao)];
+            } catch (erro) {
+                console.error(`Erro ao carregar as questões do Exame ${edicao}:`, erro);
+                return [edicao, []];
+            }
+        }));
+        const questoesPorEdicao = new Map(bancos);
+        if (state.screen !== 'ADMIN') return;
+
         const resumo = painel.summary;
         app.innerHTML = `
             ${headerHTML}
@@ -397,7 +407,12 @@ async function renderTelaAdmin(app, headerHTML) {
                                        <span class="admin-student-count">${estudante.simulations.length} simulados</span>
                                    </summary>
                                    <div class="admin-student-content">
-                                       ${estudante.simulations.map(renderSimuladoAdmin).join('') ||
+                                       ${estudante.simulations.map(simulado =>
+                                           renderSimuladoAdmin(
+                                               simulado,
+                                               questoesPorEdicao.get(String(simulado.edition)) || []
+                                           )
+                                       ).join('') ||
                                            '<p class="history-unavailable">Este aluno ainda não realizou simulados.</p>'}
                                    </div>
                                </details>

@@ -987,9 +987,15 @@ select.input-edicao {
         padding: 10px;
     }
 
+    #app {
+        width: 100%;
+        min-width: 0;
+    }
+
     .online-students {
-        top: 8px;
-        left: 8px;
+        position: static;
+        align-self: center;
+        margin: 0 auto 10px;
         padding: 7px 10px;
         font-size: 0.72rem;
     }
@@ -997,6 +1003,23 @@ select.input-edicao {
     .top-navbar {
         max-width: 100%;
         justify-content: center; /* Centraliza a navbar no celular */
+    }
+
+    .navbar-content {
+        box-sizing: border-box;
+        max-width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .user-badge {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .auth-buttons-header {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .card {
@@ -1015,7 +1038,11 @@ select.input-edicao {
         max-width: 100% !important;
     }
 
-    .history-heading,
+    .history-heading {
+        flex-direction: column;
+        gap: 12px;
+    }
+
     .history-run-summary,
     .history-run-summary-meta {
         align-items: flex-start;
@@ -1023,7 +1050,7 @@ select.input-edicao {
 
     .history-heading-actions {
         flex-wrap: wrap;
-        justify-content: flex-end;
+        justify-content: flex-start;
     }
 
     .history-run {
@@ -1031,13 +1058,17 @@ select.input-edicao {
     }
 
     .history-run-summary {
+        flex-direction: column;
+        align-items: stretch;
         gap: 12px;
         padding: 14px;
     }
 
     .history-run-summary-meta {
-        flex-direction: column;
-        align-items: flex-end;
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 8px;
     }
 
