@@ -299,6 +299,46 @@ function renderSimuladoAdmin(simulado) {
     `;
 }
 
+function atualizarResumoPainelAdmin(app, resumo) {
+    const valores = {
+        students: resumo.total_students,
+        simulations: resumo.total_simulations,
+        onlineTotal: resumo.online_total,
+        onlineStudents: resumo.online_students,
+        onlineAnonymous: resumo.online_anonymous,
+    };
+
+    for (const [chave, valor] of Object.entries(valores)) {
+        const elemento = app.querySelector(`[data-admin-stat="${chave}"]`);
+        if (elemento) elemento.textContent = String(valor);
+    }
+
+    const notaOnline = app.querySelector('[data-admin-online-note]');
+    if (notaOnline) {
+        notaOnline.textContent =
+            `Online = atividade nos últimos ${Math.round(resumo.online_window_seconds / 60)} minutos. Contagens atualizadas automaticamente.`;
+    }
+}
+
+function agendarAtualizacaoResumoAdmin(app) {
+    adminRefreshTimer = window.setTimeout(async () => {
+        if (state.screen !== 'ADMIN' || !app.isConnected) return;
+
+        try {
+            const painel = await carregarPainelAdmin();
+            if (state.screen === 'ADMIN' && app.isConnected) {
+                atualizarResumoPainelAdmin(app, painel.summary);
+            }
+        } catch (erro) {
+            console.error('Erro ao atualizar os indicadores do painel administrativo:', erro);
+        } finally {
+            if (state.screen === 'ADMIN' && app.isConnected) {
+                agendarAtualizacaoResumoAdmin(app);
+            }
+        }
+    }, 30_000);
+}
+
 async function renderTelaAdmin(app, headerHTML) {
     app.innerHTML = `
         ${headerHTML}
@@ -333,13 +373,13 @@ async function renderTelaAdmin(app, headerHTML) {
                         <button id="btn-admin-refresh" class="btn-nav-outline">Atualizar</button>
                     </div>
                 </div>
-                <p class="admin-online-note">Online = atividade nos últimos ${Math.round(resumo.online_window_seconds / 60)} minutos. Contagens atualizadas automaticamente.</p>
+                <p class="admin-online-note" data-admin-online-note>Online = atividade nos últimos ${Math.round(resumo.online_window_seconds / 60)} minutos. Contagens atualizadas automaticamente.</p>
                 <div class="admin-stats">
-                    <article class="admin-stat"><span>Alunos cadastrados</span><strong>${escaparHTML(resumo.total_students)}</strong></article>
-                    <article class="admin-stat"><span>Simulados realizados</span><strong>${escaparHTML(resumo.total_simulations)}</strong></article>
-                    <article class="admin-stat admin-stat-online-total"><span>Total online</span><strong>${escaparHTML(resumo.online_total)}</strong></article>
-                    <article class="admin-stat admin-stat-online"><span>Alunos logados online</span><strong>${escaparHTML(resumo.online_students)}</strong></article>
-                    <article class="admin-stat admin-stat-anonymous"><span>Anônimos online</span><strong>${escaparHTML(resumo.online_anonymous)}</strong></article>
+                    <article class="admin-stat"><span>Alunos cadastrados</span><strong data-admin-stat="students">${escaparHTML(resumo.total_students)}</strong></article>
+                    <article class="admin-stat"><span>Simulados realizados</span><strong data-admin-stat="simulations">${escaparHTML(resumo.total_simulations)}</strong></article>
+                    <article class="admin-stat admin-stat-online-total"><span>Total online</span><strong data-admin-stat="onlineTotal">${escaparHTML(resumo.online_total)}</strong></article>
+                    <article class="admin-stat admin-stat-online"><span>Alunos logados online</span><strong data-admin-stat="onlineStudents">${escaparHTML(resumo.online_students)}</strong></article>
+                    <article class="admin-stat admin-stat-anonymous"><span>Anônimos online</span><strong data-admin-stat="onlineAnonymous">${escaparHTML(resumo.online_anonymous)}</strong></article>
                 </div>
                 <div class="admin-students-heading">
                     <h2>Alunos</h2>
@@ -369,7 +409,7 @@ async function renderTelaAdmin(app, headerHTML) {
         `;
         bindHeaderEvents(app);
         app.querySelector('#btn-admin-refresh').addEventListener('click', render);
-        adminRefreshTimer = window.setTimeout(render, 30_000);
+        agendarAtualizacaoResumoAdmin(app);
     } catch (erro) {
         if (state.screen !== 'ADMIN') return;
         console.error('Erro ao carregar painel administrativo:', erro);
