@@ -217,11 +217,11 @@ export async function atualizarPresenca() {
     }
 
     const dados = await resposta.json();
-    if (!Number.isInteger(dados.online_students) || dados.online_students < 0) {
+    if (!Number.isInteger(dados.online_total) || dados.online_total < 0) {
         throw new Error('O servidor retornou uma contagem de estudantes online inválida.');
     }
 
-    return dados.online_students;
+    return dados.online_total;
 }
 
 export async function carregarPainelAdmin() {
