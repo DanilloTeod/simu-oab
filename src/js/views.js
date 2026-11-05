@@ -581,6 +581,13 @@ export function render() {
                 </div>
                 <button id="btn-iniciar" class="btn-primary">Iniciar Simulado</button>
             </div>
+
+            <section class="seo-content" aria-labelledby="sobre-simulado">
+                <h2 id="sobre-simulado">Prepare-se para a 1ª fase do Exame de Ordem</h2>
+                <p>Pratique para a prova da OAB com questões de exames anteriores. Selecione uma disciplina e a edição desejada para começar um simulado online.</p>
+                <h3>Como funciona o simulado</h3>
+                <p>Escolha a matéria e a edição da prova, responda às questões e confira seu desempenho ao concluir. O conteúdo é organizado para ajudar você a revisar os assuntos da primeira fase.</p>
+            </section>
         `;
 
         // Ativa os eventos da Navbar
