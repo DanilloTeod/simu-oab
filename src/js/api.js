@@ -3,9 +3,7 @@ import { state } from "./state.js";
 import { notify } from "./notifications.js";
 import { getQuestionsForSimulation } from "./exam.js";
 
-const API_BASE_URL = import.meta.env.DEV
-    ? 'http://127.0.0.1:5000'
-    : 'https://danilloteod.pythonanywhere.com';
+const API_BASE_URL = import.meta.env.DEV = 'https://danilloteod.pythonanywhere.com';
 const ACCOUNT_ACTIVITY_KEY = 'account_last_activity_at';
 
 function limparDadosSessao() {

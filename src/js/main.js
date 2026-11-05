@@ -6,6 +6,7 @@ import {
 } from "./quiz-progress.js";
 import { notify } from "./notifications.js";
 import { state } from "./state.js";
+import "./nav-animations.js";
 
 const ACCOUNT_ACTIVITY_KEY = 'account_last_activity_at';
 const ACCOUNT_IDLE_LIMIT = 60 * 60 * 1000;
@@ -13,13 +14,18 @@ const ACTIVITY_SYNC_INTERVAL = 2 * 60 * 1000;
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
+    const temasDisponiveis = ['paper', 'mist', 'ocean', 'forest', 'plum', 'sunset'];
     const temaSalvo = localStorage.getItem('site_theme');
-    if (temaSalvo === 'purple') {
-        document.documentElement.dataset.theme = 'purple';
-    }
+    document.documentElement.dataset.theme = temaSalvo === 'purple'
+        ? 'plum'
+        : temasDisponiveis.includes(temaSalvo) ? temaSalvo : 'ocean';
 
+    const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/';
+    const isAppPath = normalizedPath === '/' || normalizedPath === '/index.html';
     const resetToken = new URLSearchParams(window.location.search).get('reset_token');
-    if (resetToken) {
+    if (!isAppPath) {
+        state.screen = 'NOT_FOUND';
+    } else if (resetToken) {
         state.screen = 'RESET_PASSWORD';
         state.resetToken = resetToken;
     }

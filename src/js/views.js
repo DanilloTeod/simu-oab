@@ -695,19 +695,25 @@ function getHeaderUsuarioHTML() {
     const nomeUsuario = estaLogado
         ? (localStorage.getItem('user_name') || 'Estudante')
         : 'Anônimo';
-    const temaRoxoAtivo = document.documentElement.dataset.theme === 'purple';
+    const temaAtual = document.documentElement.dataset.theme || 'paper';
+    const temas = [
+        ['paper', 'Papel', '#fafafa', '#171717'],
+        ['mist', 'Névoa', '#f4f4f5', '#52525b'],
+        ['ocean', 'Oceano', '#eff6ff', '#2563eb'],
+        ['forest', 'Floresta', '#f0fdf4', '#15803d'],
+        ['plum', 'Ameixa', '#faf5ff', '#7e22ce'],
+        ['sunset', 'Pôr do sol', '#fff7ed', '#c2410c'],
+    ];
 
     return `
         <header class="top-navbar">
             <div class="navbar-content">
-                <button
-                    id="btn-theme-toggle"
-                    class="btn-theme-toggle"
-                    type="button"
-                    aria-label="${temaRoxoAtivo ? 'Ativar tema padrão' : 'Ativar tema roxo'}"
-                    aria-pressed="${temaRoxoAtivo}"
-                >${temaRoxoAtivo ? 'Tema padrão' : 'Tema roxo'}</button>
-                <span class="user-badge">👤 <strong>${escaparHTML(nomeUsuario)}</strong></span>
+                <div class="settings-menu">
+                    <button id="btn-settings" class="btn-theme-toggle" type="button" aria-label="Configurações" aria-expanded="false" aria-controls="settings-panel">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Zm8.1 4.98 1.22.95-1.5 2.6-1.46-.52a7.4 7.4 0 0 1-1.47.85l-.24 1.53h-3l-.24-1.53a7.4 7.4 0 0 1-1.47-.85l-1.46.52-1.5-2.6 1.22-.95a7.6 7.6 0 0 1 0-1.7l-1.22-.95 1.5-2.6 1.46.52a7.4 7.4 0 0 1 1.47-.85l.24-1.53h3l.24 1.53c.53.2 1.03.49 1.47.85l1.46-.52 1.5 2.6-1.22.95a7.6 7.6 0 0 1 0 1.7Z"/></svg>
+                    </button>
+                </div>
+                <span class="user-badge"><strong>${escaparHTML(nomeUsuario)}</strong></span>
                 <div class="auth-buttons-header">
                     ${estaLogado ? `
                         <button id="btn-dashboard" class="btn-nav-filled ${state.screen === 'HISTORY' ? 'is-active' : ''}" title="Histórico de Simulados" ${state.screen === 'HISTORY' ? 'aria-current="page"' : ''}>Histórico</button>
@@ -724,12 +730,26 @@ function getHeaderUsuarioHTML() {
                 </div>
             </div>
         </header>
+        <button id="settings-backdrop" class="settings-backdrop" type="button" aria-label="Fechar configurações" hidden></button>
+        <section id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-label="Configurações" hidden>
+            <h2>Tema</h2>
+            <div class="theme-options" role="group" aria-label="Escolha um tema">
+                ${temas.map(([id, nome, canvas, accent]) => `
+                    <button class="theme-option" type="button" data-theme-choice="${id}" aria-pressed="${temaAtual === id}">
+                        <span class="theme-swatch" style="--swatch-canvas:${canvas};--swatch-accent:${accent}" aria-hidden="true"></span>
+                        <span>${nome}</span>
+                    </button>
+                `).join('')}
+            </div>
+        </section>
     `;
 }
 
 // --- FUNÇÃO AUXILIAR: Gerencia os cliques da Navbar (Login, Cadastrar, Sair) ---
 function bindHeaderEvents(container) {
-    const btnTheme = container.querySelector('#btn-theme-toggle');
+    const btnSettings = container.querySelector('#btn-settings');
+    const settingsPanel = container.querySelector('#settings-panel');
+    const settingsBackdrop = container.querySelector('#settings-backdrop');
     const btnLogout = container.querySelector('#btn-logout');
     const btnLogin = container.querySelector('#btn-login-nav');
     const btnRegister = container.querySelector('#btn-register-nav');
@@ -740,14 +760,30 @@ function bindHeaderEvents(container) {
     const btnAdminHome = container.querySelector('#btn-admin-home');
     const btnHistoryHome = container.querySelector('#btn-history-home');
 
-    if (btnTheme) {
-        btnTheme.addEventListener('click', () => {
-            const temaRoxoAtivo = document.documentElement.dataset.theme !== 'purple';
-            document.documentElement.dataset.theme = temaRoxoAtivo ? 'purple' : 'default';
-            localStorage.setItem('site_theme', temaRoxoAtivo ? 'purple' : 'default');
-            btnTheme.textContent = temaRoxoAtivo ? 'Tema padrão' : 'Tema roxo';
-            btnTheme.setAttribute('aria-label', temaRoxoAtivo ? 'Ativar tema padrão' : 'Ativar tema roxo');
-            btnTheme.setAttribute('aria-pressed', String(temaRoxoAtivo));
+    if (btnSettings && settingsPanel && settingsBackdrop) {
+        btnSettings.addEventListener('click', () => {
+            const abrir = settingsPanel.hidden;
+            settingsPanel.hidden = !abrir;
+            settingsBackdrop.hidden = !abrir;
+            btnSettings.setAttribute('aria-expanded', String(abrir));
+        });
+
+        settingsBackdrop.addEventListener('click', () => {
+            settingsPanel.hidden = true;
+            settingsBackdrop.hidden = true;
+            btnSettings.setAttribute('aria-expanded', 'false');
+            btnSettings.focus();
+        });
+
+        settingsPanel.querySelectorAll('[data-theme-choice]').forEach(button => {
+            button.addEventListener('click', () => {
+                const tema = button.dataset.themeChoice;
+                document.documentElement.dataset.theme = tema;
+                localStorage.setItem('site_theme', tema);
+                settingsPanel.querySelectorAll('[data-theme-choice]').forEach(opcao => {
+                    opcao.setAttribute('aria-pressed', String(opcao === button));
+                });
+            });
         });
     }
 
@@ -1746,6 +1782,24 @@ export function render() {
             `;
             bindHeaderEvents(app);
             app.querySelector('#btn-retry-result').addEventListener('click', render);
+        });
+    }
+    else if (state.screen === 'NOT_FOUND') {
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card not-found-card" aria-labelledby="not-found-title">
+                <p class="not-found-code" aria-hidden="true">404</p>
+                <h1 id="not-found-title">A página não existe.</h1>
+                <p>A página requisitada não existe e/ou foi excluida.</p>
+                <button class="btn-primary" id="btn-not-found-home" type="button">Voltar ao início</button>
+            </section>
+        `;
+        bindHeaderEvents(app);
+        app.querySelector('#btn-not-found-home').addEventListener('click', () => {
+            window.history.replaceState({}, '', '/');
+            document.title = 'Simulado OAB 1ª Fase Grátis | Questões por Matéria';
+            state.screen = 'HOME';
+            render();
         });
     }
 }
