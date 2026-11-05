@@ -6,6 +6,14 @@ import { getQuestionsForSimulation } from "./exam.js";
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://127.0.0.1:5000'
     : 'https://danilloteod.pythonanywhere.com';
+const ACCOUNT_ACTIVITY_KEY = 'account_last_activity_at';
+
+function limparDadosSessao() {
+    localStorage.removeItem('token_oab');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('is_admin');
+    localStorage.removeItem(ACCOUNT_ACTIVITY_KEY);
+}
 
 export async function loadQuestions(edicao){
     const questions = await loadEditionQuestions(edicao);
@@ -33,6 +41,7 @@ export async function login(email, senha){
             localStorage.setItem('token_oab', dados.token); // armazena o token JWT recebido do backend
             localStorage.setItem('user_name', dados.estudante.nome); // armazena o nome do estudante
             localStorage.setItem('is_admin', String(dados.is_admin === true));
+            localStorage.setItem(ACCOUNT_ACTIVITY_KEY, String(Date.now()));
             try {
                 await atualizarPresenca();
             } catch (erro) {
@@ -93,6 +102,26 @@ export async function cadastrar(nome, email, senha) {
     }
 };
 
+export async function registrarAtividadeSessao() {
+    const token = localStorage.getItem('token_oab');
+    if (!token) return false;
+
+    const resposta = await fetch(`${API_BASE_URL}/api/sessao/atividade`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+    });
+
+    if (resposta.status === 401 || resposta.status === 422) {
+        return false;
+    }
+    if (!resposta.ok) {
+        throw new Error(`Não foi possível registrar atividade (HTTP ${resposta.status}).`);
+    }
+    const dados = await resposta.json();
+    if (dados.token) localStorage.setItem('token_oab', dados.token);
+    return true;
+}
+
 export async function solicitarRecuperacaoSenha(email) {
     const resposta = await fetch(`${API_BASE_URL}/api/senha/recuperar`, {
         method: 'POST',
@@ -128,9 +157,7 @@ export async function carregarPerfil() {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
     }
     if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível carregar sua conta.');
     return dados;
@@ -150,13 +177,14 @@ export async function atualizarPerfil(conta) {
     });
     const dados = await resposta.json();
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
     }
     if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível atualizar sua conta.');
     if (dados.estudante?.nome) localStorage.setItem('user_name', dados.estudante.nome);
-    if (dados.token) localStorage.setItem('token_oab', dados.token);
+    if (dados.token) {
+        localStorage.setItem('token_oab', dados.token);
+        localStorage.setItem(ACCOUNT_ACTIVITY_KEY, String(Date.now()));
+    }
     return dados;
 }
 
@@ -192,9 +220,7 @@ export async function enviarSimulado(arrayAnswers, correctAnswers, editionSelect
         const dados = await resposta.json();
 
         if (resposta.status === 401 || resposta.status === 422) {
-            localStorage.removeItem('token_oab'); // remove o token inválido
-            localStorage.removeItem('user_name'); // remove o nome armazenado
-            localStorage.removeItem('is_admin');
+            limparDadosSessao();
 
             notify('Sua sessão expirou. Entre novamente para continuar.', 'error');
             return false;
@@ -227,9 +253,7 @@ export async function historico() {
     });
 
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
         throw new Error('Sua sessão expirou ou o token não é válido para este servidor. Faça login novamente.');
     }
 
@@ -266,9 +290,7 @@ export async function atualizarPresenca() {
     });
 
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
     }
 
     if (!resposta.ok) {
@@ -293,9 +315,7 @@ export async function carregarPainelAdmin() {
     const dados = await resposta.json();
 
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
     }
     if (!resposta.ok) {
         throw new Error(dados.erro || 'Não foi possível carregar o painel administrativo.');
@@ -319,9 +339,7 @@ async function requisicaoAdmin(path, options = {}) {
     const dados = await resposta.json();
 
     if (resposta.status === 401 || resposta.status === 422) {
-        localStorage.removeItem('token_oab');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('is_admin');
+        limparDadosSessao();
     }
     if (!resposta.ok) {
         throw new Error(dados.erro || 'Não foi possível concluir a ação administrativa.');

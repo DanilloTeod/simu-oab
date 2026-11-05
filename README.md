@@ -14,6 +14,7 @@ Aplicação web para praticar questões da 1ª fase do Exame de Ordem da OAB. O 
 - Confirmação do navegador ao tentar sair durante o simulado e restauração do progresso após recarregar a página.
 - Resolução de questões e visualização do resultado.
 - Cadastro e login de estudantes.
+- Encerramento automático da sessão após uma hora sem atividade, com manutenção da sessão durante o uso ativo.
 - Recuperação de senha por email e gerenciamento dos próprios dados e senha.
 - Salvamento do resultado e das respostas no backend para usuários autenticados.
 - Histórico com revisão de questões, gabaritos e comentários.
@@ -55,6 +56,7 @@ O cliente HTTP do frontend está em [`src/js/api.js`](src/js/api.js). Ele usa `h
 | --- | --- | --- |
 | Criar conta | `POST /api/cadastro` | Não |
 | Entrar | `POST /api/login` | Não |
+| Renovar atividade da sessão autenticada | `POST /api/sessao/atividade` | JWT |
 | Solicitar recuperação de senha | `POST /api/senha/recuperar` | Não |
 | Redefinir senha por token | `POST /api/senha/redefinir` | Não |
 | Consultar ou atualizar o próprio perfil | `GET/PATCH /api/perfil` | JWT |
@@ -67,7 +69,7 @@ O cliente HTTP do frontend está em [`src/js/api.js`](src/js/api.js). Ele usa `h
 | Excluir conta e anonimizar simulados | `DELETE /api/admin/users/<id>` | JWT de administrador |
 | Salvar resultado do simulado | `POST /api/simulados/salvar` | JWT Bearer |
 
-O login guarda o token JWT no localStorage na chave token_oab e o nome do estudante em user_name. A API expira tokens após uma hora. Alterações na conta revogam sessões anteriores e retornam um novo token para manter a sessão atual. O histórico autenticado já pode ser consultado e revisado no site.
+O login guarda o token JWT no localStorage na chave token_oab e o nome do estudante em user_name. A sessão termina após uma hora sem atividade; enquanto o usuário interage com o site, o frontend sincroniza essa atividade com a API e renova o JWT quando necessário. Alterações na conta revogam sessões anteriores e retornam um novo token para manter a sessão atual. O histórico autenticado já pode ser consultado e revisado no site.
 
 Para executar a API localmente, siga as instruções no [README do backend](https://github.com/DanilloTeod/simu-oab-backend). O backend precisa permitir a origem local do Vite e o domínio Vercel em `FRONTEND_ORIGINS`. Para o primeiro acesso administrativo, configure o email em `ADMIN_EMAILS`, garanta que a conta existe e faça login novamente. Depois, use o painel para conceder permissões a outras contas. O backend verifica a permissão em cada requisição administrativa.
 

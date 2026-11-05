@@ -756,6 +756,7 @@ function bindHeaderEvents(container) {
             localStorage.removeItem('token_oab');
             localStorage.removeItem('user_name');
             localStorage.removeItem('is_admin');
+            localStorage.removeItem('account_last_activity_at');
             atualizarPresenca().catch(erro => {
                 console.error('Erro ao atualizar presença após sair:', erro);
             });

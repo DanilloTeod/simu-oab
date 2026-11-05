@@ -1,11 +1,15 @@
 import { render } from "./views.js";
-import { atualizarPresenca } from "./api.js";
+import { atualizarPresenca, registrarAtividadeSessao } from "./api.js";
 import {
     protectQuizFromAccidentalExit,
     restoreQuizProgress,
 } from "./quiz-progress.js";
 import { notify } from "./notifications.js";
 import { state } from "./state.js";
+
+const ACCOUNT_ACTIVITY_KEY = 'account_last_activity_at';
+const ACCOUNT_IDLE_LIMIT = 60 * 60 * 1000;
+const ACTIVITY_SYNC_INTERVAL = 2 * 60 * 1000;
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +29,88 @@ window.addEventListener('DOMContentLoaded', () => {
     if (quizRestaurado) {
         notify('Seu simulado foi restaurado de onde você parou.', 'info');
     }
+
+    let lastActivityAt = Number(localStorage.getItem(ACCOUNT_ACTIVITY_KEY)) || Date.now();
+    let lastActivitySyncAt = 0;
+    let lastActivityStorageWriteAt = 0;
+    let activitySync = null;
+
+    const encerrarSessaoPorInatividade = () => {
+        if (!localStorage.getItem('token_oab')) return;
+        localStorage.removeItem('token_oab');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('is_admin');
+        localStorage.removeItem(ACCOUNT_ACTIVITY_KEY);
+        state.screen = 'HOME';
+        render();
+        notify('Sua sessão foi encerrada após uma hora de inatividade.', 'info');
+    };
+
+    const sincronizarAtividade = () => {
+        if (activitySync || !localStorage.getItem('token_oab')) return;
+        activitySync = registrarAtividadeSessao()
+            .then(sessaoValida => {
+                lastActivitySyncAt = Date.now();
+                if (!sessaoValida) encerrarSessaoPorInatividade();
+            })
+            .catch(erro => {
+                console.error('Erro ao sincronizar atividade da sessão:', erro);
+            })
+            .finally(() => {
+                activitySync = null;
+            });
+    };
+
+    const verificarInatividade = () => {
+        if (!localStorage.getItem('token_oab')) return;
+        const atividadeSalva = Number(localStorage.getItem(ACCOUNT_ACTIVITY_KEY));
+        if (atividadeSalva) lastActivityAt = atividadeSalva;
+        if (Date.now() - lastActivityAt >= ACCOUNT_IDLE_LIMIT) {
+            encerrarSessaoPorInatividade();
+            return;
+        }
+        if (
+            Date.now() - lastActivityAt <= ACTIVITY_SYNC_INTERVAL &&
+            Date.now() - lastActivitySyncAt >= ACTIVITY_SYNC_INTERVAL
+        ) {
+            sincronizarAtividade();
+        }
+    };
+
+    const registrarInteracao = () => {
+        if (!localStorage.getItem('token_oab')) return;
+        const agora = Date.now();
+        const atividadeSalva = Number(localStorage.getItem(ACCOUNT_ACTIVITY_KEY));
+        if (atividadeSalva) lastActivityAt = atividadeSalva;
+        if (agora - lastActivityAt >= ACCOUNT_IDLE_LIMIT) {
+            encerrarSessaoPorInatividade();
+            return;
+        }
+
+        lastActivityAt = agora;
+        if (agora - lastActivityStorageWriteAt >= 10_000) {
+            localStorage.setItem(ACCOUNT_ACTIVITY_KEY, String(agora));
+            lastActivityStorageWriteAt = agora;
+        }
+        if (agora - lastActivitySyncAt >= ACTIVITY_SYNC_INTERVAL) {
+            sincronizarAtividade();
+        }
+    };
+
+    if (localStorage.getItem('token_oab')) {
+        if (Date.now() - lastActivityAt >= ACCOUNT_IDLE_LIMIT) {
+            encerrarSessaoPorInatividade();
+        } else {
+            sincronizarAtividade();
+        }
+    }
+
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel'].forEach(eventName => {
+        document.addEventListener(eventName, registrarInteracao, { passive: true });
+    });
+    window.setInterval(verificarInatividade, 30_000);
+    document.addEventListener('visibilitychange', verificarInatividade);
+
     const indicadorOnline = document.getElementById('online-students');
     const registrarPresenca = () => {
         if (document.visibilityState !== 'visible') return;
