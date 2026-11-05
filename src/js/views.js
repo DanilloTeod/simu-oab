@@ -5,6 +5,10 @@ import {
     enviarSimulado,
     login,
     cadastrar,
+    solicitarRecuperacaoSenha,
+    redefinirSenha,
+    carregarPerfil,
+    atualizarPerfil,
     historico,
     carregarPainelAdmin,
     atualizarPresenca,
@@ -26,6 +30,7 @@ import {
     pararCronometro,
     segundosRestantes,
 } from "./timer.js";
+import { getExamSubjects, getSubjectLabel, getTimerOptions } from "./exam.js";
 import {
     clearQuizProgress,
     saveQuizProgress,
@@ -42,6 +47,7 @@ function scrollTop() {
 
 function resetarTentativa() {
     state.currentIndex = 0;
+    state.totalQuestions = 0;
     state.correctAnswers = 0;
     state.currentResultIndex = 0;
     state.arrayAnswers = [];
@@ -134,16 +140,7 @@ function formatarDataHistorico(data) {
 }
 
 function formatarMateria(materia) {
-    const materias = {
-        etica: 'Ética Profissional',
-        constitucional: 'Direito Constitucional',
-        civil: 'Direito Civil',
-        processualcivil: 'Direito Processual Civil',
-        penal: 'Direito Penal',
-        processualpenal: 'Direito Processual Penal'
-    };
-
-    return materias[materia] || materia;
+    return getSubjectLabel(materia);
 }
 
 function renderQuestaoHistorico(resposta, questoes, numeroQuestao, edicao) {
@@ -706,6 +703,7 @@ function getHeaderUsuarioHTML() {
                 <div class="auth-buttons-header">
                     ${estaLogado ? `
                         <button id="btn-dashboard" class="btn-nav-filled ${state.screen === 'HISTORY' ? 'is-active' : ''}" title="Histórico de Simulados" ${state.screen === 'HISTORY' ? 'aria-current="page"' : ''}>Histórico</button>
+                        <button id="btn-account-nav" class="btn-nav-outline ${state.screen === 'ACCOUNT' ? 'is-active' : ''}" ${state.screen === 'ACCOUNT' ? 'aria-current="page"' : ''}>Minha conta</button>
                         ${localStorage.getItem('is_admin') === 'true'
                             ? `<button id="btn-admin-nav" class="btn-nav-outline ${state.screen === 'ADMIN' ? 'is-active' : ''}" ${state.screen === 'ADMIN' ? 'aria-current="page"' : ''}>Admin</button>`
                             : ''
@@ -727,6 +725,8 @@ function bindHeaderEvents(container) {
     const btnLogin = container.querySelector('#btn-login-nav');
     const btnRegister = container.querySelector('#btn-register-nav');
     const btnDashboard = container.querySelector('#btn-dashboard');
+    const btnAccount = container.querySelector('#btn-account-nav');
+    const btnAccountHome = container.querySelector('#btn-account-home');
     const btnAdmin = container.querySelector('#btn-admin-nav');
     const btnAdminHome = container.querySelector('#btn-admin-home');
     const btnHistoryHome = container.querySelector('#btn-history-home');
@@ -747,6 +747,20 @@ function bindHeaderEvents(container) {
     if (btnDashboard){
         btnDashboard.addEventListener('click', () => {
             state.screen = 'HISTORY';
+            render();
+        });
+    }
+
+    if (btnAccount) {
+        btnAccount.addEventListener('click', () => {
+            state.screen = 'ACCOUNT';
+            render();
+        });
+    }
+
+    if (btnAccountHome) {
+        btnAccountHome.addEventListener('click', () => {
+            state.screen = 'HOME';
             render();
         });
     }
@@ -787,6 +801,116 @@ function bindHeaderEvents(container) {
     }
 }
 
+async function renderTelaConta(app, headerHTML) {
+    app.innerHTML = `
+        ${headerHTML}
+        <section class="card">
+            <div class="history-heading">
+                <h1>Minha conta</h1>
+                <button id="btn-account-home" class="btn-nav-outline">← Início</button>
+            </div>
+            <p class="card-subtitle">Atualize seus dados ou altere sua senha.</p>
+            <p role="status">Carregando seus dados...</p>
+        </section>
+    `;
+    bindHeaderEvents(app);
+
+    try {
+        const perfil = await carregarPerfil();
+        if (state.screen !== 'ACCOUNT') return;
+        const estudante = perfil.estudante || perfil;
+
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card">
+                <div class="history-heading">
+                    <h1>Minha conta</h1>
+                    <button id="btn-account-home" class="btn-nav-outline">← Início</button>
+                </div>
+                <p class="card-subtitle">Para salvar alterações, confirme sua senha atual.</p>
+                <form id="account-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="account-name">Nome</label>
+                        <input type="text" id="account-name" class="input-edicao" maxlength="120" value="${escaparHTML(estudante.nome)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-email">E-mail</label>
+                        <input type="email" id="account-email" class="input-edicao" maxlength="150" value="${escaparHTML(estudante.email)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-current-password">Senha atual</label>
+                        <input type="password" id="account-current-password" class="input-edicao" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="account-new-password">Nova senha <span>(opcional)</span></label>
+                        <input type="password" id="account-new-password" class="input-edicao" minlength="8" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="account-confirm-password">Confirme a nova senha</label>
+                        <input type="password" id="account-confirm-password" class="input-edicao" minlength="8" autocomplete="new-password">
+                    </div>
+                    <button class="btn-primary btn-full" type="submit">Salvar alterações</button>
+                </form>
+            </section>
+        `;
+        bindHeaderEvents(app);
+
+        const form = app.querySelector('#account-form');
+        form.addEventListener('input', () => clearFieldErrors(form));
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const novaSenha = app.querySelector('#account-new-password').value;
+            const confirmaSenha = app.querySelector('#account-confirm-password').value;
+            if (novaSenha && novaSenha !== confirmaSenha) {
+                mostrarErroDeFormulario(form, 'As novas senhas não conferem.');
+                return;
+            }
+            if (!novaSenha && confirmaSenha) {
+                mostrarErroDeFormulario(form, 'Informe uma nova senha ou deixe os dois campos em branco.');
+                return;
+            }
+
+            const payload = {
+                nome: app.querySelector('#account-name').value.trim(),
+                email: app.querySelector('#account-email').value.trim(),
+                senha_atual: app.querySelector('#account-current-password').value,
+            };
+            if (novaSenha) payload.nova_senha = novaSenha;
+
+            await withButtonLoading(form.querySelector('[type="submit"]'), async () => {
+                try {
+                    await atualizarPerfil(payload);
+                    notify('Seus dados foram atualizados.', 'success');
+                    render();
+                } catch (erro) {
+                    notify(erro.message || 'Não foi possível atualizar sua conta.', 'error');
+                }
+            }, 'Salvando...');
+        });
+    } catch (erro) {
+        if (state.screen !== 'ACCOUNT') return;
+        if (!localStorage.getItem('token_oab')) {
+            state.screen = 'LOGIN';
+            render();
+            return;
+        }
+        console.error('Erro ao carregar os dados da conta:', erro);
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card history-error">
+                <div class="history-heading">
+                    <h1>Não foi possível carregar sua conta</h1>
+                    <button id="btn-account-home" class="btn-nav-outline">← Início</button>
+                </div>
+                <p>${escaparHTML(erro.message || 'Tente novamente em alguns instantes.')}</p>
+                <button class="btn-primary" id="btn-retry-account">Tentar novamente</button>
+            </section>
+        `;
+        bindHeaderEvents(app);
+        app.querySelector('#btn-retry-account').addEventListener('click', render);
+    }
+}
+
 export function render() {
     if (adminRefreshTimer !== null) {
         window.clearTimeout(adminRefreshTimer);
@@ -802,15 +926,18 @@ export function render() {
             ${headerHTML}
 
             <div class="card">
-                <h1>Simulado OAB 1ª Fase</h1>
-                <p><strong>Escolha uma Disciplina</strong></p>
-                
-                <button data-materia="etica" class="btn-materia">Ética Profissional</button>
-                <button data-materia="constitucional" class="btn-materia">Direito Constitucional</button>
-                <button data-materia="civil" class="btn-materia">Direito Civil</button>
-                <button data-materia="processualcivil" class="btn-materia">Direito Processual Civil</button>
-                <button data-materia="penal" class="btn-materia">Direito Penal</button>        
-                <button data-materia="processualpenal" class="btn-materia">Direito Processual Penal</button>        
+                <h1>Simulados OAB — 1ª Fase</h1>
+                <p><strong>Escolha como deseja praticar</strong></p>
+
+                <div class="simulation-mode-switch" role="group" aria-label="Tipo de simulado">
+                    <button class="simulation-mode-option" type="button" data-simulation-mode="full" aria-pressed="${state.simulationMode === 'full'}">
+                        Prova completa <span>80 questões</span>
+                    </button>
+                    <button class="simulation-mode-option" type="button" data-simulation-mode="subject" aria-pressed="${state.simulationMode === 'subject'}">
+                        Por matéria <span>Questões da matéria escolhida</span>
+                    </button>
+                </div>
+                <p id="simulation-mode-help" class="simulation-mode-help"></p>
 
                 <div class="edicao-container">
                     <label for="edicao" class="label-edicao">Edição da Prova: </label>
@@ -826,65 +953,157 @@ export function render() {
                         <option value="47">47° Exame de Ordem Unificado</option>
                     </select>
                 </div>
+                <div class="subject-selection" id="subject-selection">
+                    <label for="subject">Matéria</label>
+                    <select class="input-edicao" id="subject" name="subject" disabled>
+                        <option value="">Carregando matérias...</option>
+                    </select>
+                </div>
                 <div class="timer-selection">
                     <label for="timer-duration">Tempo do simulado</label>
                     <select class="input-edicao" id="timer-duration" aria-describedby="timer-duration-help">
-                        <option value="none">Sem limite (sem cronômetro)</option>
-                        ${Array.from({ length: 7 }, (_, index) => {
-                            const minutos = 30 + index * 5;
-                            const referencia = minutos === 30
-                                ? ' — tempo médio para 8 questões'
-                                : '';
-                            return `<option value="${minutos}">${minutos} minutos${referencia}</option>`;
-                        }).join('')}
                     </select>
-                    <p id="timer-duration-help">A 1ª fase tem 80 questões e 5 horas de prova: a média proporcional é 30 minutos para 8 questões. Você pode acrescentar 5 minutos por opção, até 1 hora.</p>
+                    <p id="timer-duration-help"></p>
                 </div>
-                <button id="btn-iniciar" class="btn-primary">Iniciar Simulado</button>
+                <button id="btn-iniciar" class="btn-primary" disabled>Iniciar simulado</button>
             </div>
 
             <section class="seo-content" aria-labelledby="sobre-simulado">
                 <h2 id="sobre-simulado">Prepare-se para a 1ª fase do Exame de Ordem</h2>
-                <p>Pratique para a prova da OAB com questões de exames anteriores. Selecione uma disciplina e a edição desejada para começar um simulado online.</p>
+                <p>Pratique para a prova da OAB com questões de exames anteriores. Escolha a prova completa com 80 questões ou um simulado por matéria, e selecione a edição desejada.</p>
                 <h3>Como funciona o simulado</h3>
-                <p>Escolha a matéria e a edição da prova, responda às questões e confira seu desempenho ao concluir. O conteúdo é organizado para ajudar você a revisar os assuntos da primeira fase.</p>
+                <p>Responda às questões da edição escolhida, use o cronômetro opcional e confira seu desempenho ao concluir. Na modalidade por matéria, todas as disciplinas disponíveis naquela edição podem ser selecionadas.</p>
             </section>
         `;
 
         // Ativa os eventos da Navbar
         bindHeaderEvents(app);
 
-        const subjectButtons = app.querySelectorAll('.btn-materia');
         const start = app.querySelector('#btn-iniciar');
         const edition = app.querySelector('#edicao');
         const timerDuration = app.querySelector('#timer-duration');
+        const subjectSelection = app.querySelector('#subject-selection');
+        const subjectSelect = app.querySelector('#subject');
+        const modeHelp = app.querySelector('#simulation-mode-help');
+        const timerHelp = app.querySelector('#timer-duration-help');
+        const modeOptions = app.querySelectorAll('[data-simulation-mode]');
+        let subjectLoadVersion = 0;
 
         edition.value = state.editionSelected;
 
-        edition.addEventListener('change', (e) => {
-            state.editionSelected = e.target.value;
+        const atualizarOpcoesDeTempo = () => {
+            const fullExam = state.simulationMode === 'full';
+            const selectedValue = state.timerDurationMinutes === null
+                ? 'none'
+                : String(state.timerDurationMinutes);
+            const options = getTimerOptions(state.simulationMode).map(option => [
+                option.minutes === null ? 'none' : String(option.minutes),
+                option.label,
+            ]);
+
+            timerDuration.innerHTML = options.map(([value, label]) =>
+                `<option value="${value}">${label}</option>`
+            ).join('');
+            timerDuration.value = options.some(([value]) => value === selectedValue)
+                ? selectedValue
+                : (fullExam ? '300' : 'none');
+            state.timerDurationMinutes = timerDuration.value === 'none'
+                ? null
+                : Number(timerDuration.value);
+            subjectSelection.hidden = fullExam;
+            modeHelp.textContent = fullExam
+                ? 'Responda às 80 questões da edição escolhida, na ordem original da prova.'
+                : 'Escolha uma das matérias disponíveis nesta edição para responder às questões correspondentes.';
+            timerHelp.textContent = fullExam
+                ? 'A prova oficial tem 80 questões e duração de até 5 horas.'
+                : 'A média proporcional é 30 minutos para 8 questões. Você pode acrescentar 5 minutos por opção, até 1 hora.';
+        };
+
+        const carregarMaterias = async () => {
+            const loadVersion = ++subjectLoadVersion;
+            subjectSelect.disabled = true;
+            subjectSelect.innerHTML = '<option value="">Carregando matérias...</option>';
+            start.disabled = true;
+
+            try {
+                const questions = await loadEditionQuestions(state.editionSelected);
+                if (loadVersion !== subjectLoadVersion) return;
+
+                const subjects = getExamSubjects(questions);
+                subjectSelect.innerHTML = `
+                    <option value="">Selecione uma matéria</option>
+                    ${subjects.map(subject =>
+                        `<option value="${escaparHTML(subject)}">${escaparHTML(getSubjectLabel(subject))}</option>`
+                    ).join('')}
+                `;
+                subjectSelect.disabled = subjects.length === 0;
+                state.subject = state.simulationMode === 'subject'
+                    && subjects.includes(state.subject)
+                    ? state.subject
+                    : null;
+                subjectSelect.value = state.subject || '';
+                start.disabled = subjects.length === 0
+                    || (state.simulationMode === 'subject' && !state.subject);
+            } catch (erro) {
+                if (loadVersion !== subjectLoadVersion) return;
+                console.error('Erro ao carregar as matérias do exame:', erro);
+                subjectSelect.innerHTML = '<option value="">Não foi possível carregar as matérias</option>';
+                notify(erro.message || 'Não foi possível carregar as matérias desta edição.', 'error');
+            }
+        };
+
+        atualizarOpcoesDeTempo();
+        carregarMaterias();
+
+        edition.addEventListener('change', event => {
+            state.editionSelected = event.target.value;
+            state.subject = null;
+            carregarMaterias();
         });
 
-        timerDuration.value = state.timerDurationMinutes === null
-            ? 'none'
-            : String(state.timerDurationMinutes);
         timerDuration.addEventListener('change', event => {
             state.timerDurationMinutes = event.target.value === 'none'
                 ? null
                 : Number(event.target.value);
         });
 
-        subjectButtons.forEach(botao => {
-            botao.addEventListener('click', (e) => {
-                subjectButtons.forEach(b => b.classList.remove('ativo'));
-                e.target.classList.add('ativo');
-                state.subject = e.target.getAttribute('data-materia');
+        subjectSelect.addEventListener('change', event => {
+            state.subject = event.target.value || null;
+            if (state.simulationMode === 'subject') {
+                start.disabled = !state.subject;
+            }
+        });
+
+        modeOptions.forEach(button => {
+            button.addEventListener('click', () => {
+                const newMode = button.dataset.simulationMode;
+                if (state.simulationMode === newMode) return;
+
+                state.simulationMode = newMode;
+                if (newMode === 'full') {
+                    state.subject = null;
+                    state.timerDurationMinutes = 300;
+                } else {
+                    state.timerDurationMinutes = null;
+                }
+                modeOptions.forEach(option =>
+                    option.setAttribute('aria-pressed', String(option === button))
+                );
+                atualizarOpcoesDeTempo();
+                if (newMode === 'subject' && !subjectSelect.options.length) {
+                    carregarMaterias();
+                } else if (newMode === 'subject') {
+                    state.subject = subjectSelect.value || null;
+                    start.disabled = !state.subject;
+                } else {
+                    start.disabled = false;
+                }
             });
         });
 
         start.addEventListener("click", () => {
-            if (state.subject === null) {
-                notify('Escolha uma disciplina para iniciar o simulado.', 'error');
+            if (state.simulationMode === 'subject' && state.subject === null) {
+                notify('Escolha uma matéria para iniciar o simulado.', 'error');
             } else {
                 resetarTentativa();
                 state.timerDeadline = state.timerDurationMinutes === null
@@ -925,6 +1144,9 @@ export function render() {
                     <button id="go-to-register" class="btn-link">Cadastre-se</button>
                 </div>
                 
+                <div style="text-align: center; margin-top: 12px;">
+                    <button id="btn-forgot-password" class="btn-link">Esqueci minha senha</button>
+                </div>
                 <div style="text-align: center; margin-top: 15px;">
                     <button id="btn-back-home" class="btn-link-secundary">← Voltar ao Início</button>
                 </div>
@@ -936,6 +1158,7 @@ export function render() {
         const formLogin = app.querySelector('#login-form');
         const btnGoRegister = app.querySelector('#go-to-register');
         const btnBackHome = app.querySelector('#btn-back-home');
+        const btnForgotPassword = app.querySelector('#btn-forgot-password');
 
         btnGoRegister.addEventListener('click', () => {
             state.screen = 'REGISTER';
@@ -944,6 +1167,11 @@ export function render() {
 
         btnBackHome.addEventListener('click', () => {
             state.screen = 'HOME';
+            render();
+        });
+
+        btnForgotPassword.addEventListener('click', () => {
+            state.screen = 'PASSWORD_RECOVERY';
             render();
         });
 
@@ -1042,6 +1270,104 @@ export function render() {
             }, 'Criando conta...');
         });
     }
+    else if (state.screen === 'PASSWORD_RECOVERY') {
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card">
+                <h1>Recuperar senha</h1>
+                <p class="card-subtitle">Informe seu e-mail. Se houver uma conta com esse endereço, enviaremos um link para criar uma nova senha.</p>
+                <form id="recovery-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="recovery-email">E-mail</label>
+                        <input type="email" id="recovery-email" class="input-edicao" autocomplete="email" required>
+                    </div>
+                    <button class="btn-primary btn-full" type="submit">Enviar link de recuperação</button>
+                </form>
+                <div class="form-footer">
+                    <button id="recovery-back-login" class="btn-link">Voltar ao login</button>
+                </div>
+            </section>
+        `;
+        bindHeaderEvents(app);
+
+        app.querySelector('#recovery-back-login').addEventListener('click', () => {
+            state.screen = 'LOGIN';
+            render();
+        });
+
+        const form = app.querySelector('#recovery-form');
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            await withButtonLoading(form.querySelector('[type="submit"]'), async () => {
+                try {
+                    await solicitarRecuperacaoSenha(app.querySelector('#recovery-email').value.trim());
+                    notify('Se o e-mail estiver cadastrado, você receberá instruções para redefinir a senha.', 'success');
+                } catch (erro) {
+                    notify(erro.message || 'Não foi possível solicitar a recuperação agora.', 'error');
+                }
+            }, 'Enviando...');
+        });
+    }
+    else if (state.screen === 'RESET_PASSWORD') {
+        if (!state.resetToken) {
+            state.screen = 'PASSWORD_RECOVERY';
+            render();
+            return;
+        }
+
+        app.innerHTML = `
+            ${headerHTML}
+            <section class="card">
+                <h1>Criar nova senha</h1>
+                <p class="card-subtitle">Escolha uma senha com pelo menos 8 caracteres.</p>
+                <form id="reset-password-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="reset-password">Nova senha</label>
+                        <input type="password" id="reset-password" class="input-edicao" minlength="8" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reset-password-confirm">Confirmar nova senha</label>
+                        <input type="password" id="reset-password-confirm" class="input-edicao" minlength="8" autocomplete="new-password" required>
+                    </div>
+                    <button class="btn-primary btn-full" type="submit">Redefinir senha</button>
+                </form>
+                <div class="form-footer">
+                    <button id="btn-request-another-reset" class="btn-link">Solicitar outro link</button>
+                </div>
+            </section>
+        `;
+        bindHeaderEvents(app);
+
+        const form = app.querySelector('#reset-password-form');
+        app.querySelector('#btn-request-another-reset').addEventListener('click', () => {
+            state.resetToken = null;
+            window.history.replaceState({}, '', window.location.pathname);
+            state.screen = 'PASSWORD_RECOVERY';
+            render();
+        });
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const senha = app.querySelector('#reset-password').value;
+            const confirmacao = app.querySelector('#reset-password-confirm').value;
+            if (senha !== confirmacao) {
+                mostrarErroDeFormulario(form, 'As senhas não conferem.');
+                return;
+            }
+
+            await withButtonLoading(form.querySelector('[type="submit"]'), async () => {
+                try {
+                    await redefinirSenha(state.resetToken, senha);
+                    state.resetToken = null;
+                    window.history.replaceState({}, '', window.location.pathname);
+                    state.screen = 'LOGIN';
+                    notify('Senha redefinida. Entre com sua nova senha.', 'success');
+                    render();
+                } catch (erro) {
+                    notify(erro.message || 'Não foi possível redefinir a senha.', 'error');
+                }
+            }, 'Redefinindo...');
+        });
+    }
     else if (state.screen === 'HISTORY') {
         if (!localStorage.getItem('token_oab')) {
             state.screen = 'LOGIN';
@@ -1058,11 +1384,23 @@ export function render() {
         }
         renderTelaAdmin(app, headerHTML);
     }
+    else if (state.screen === 'ACCOUNT') {
+        if (!localStorage.getItem('token_oab')) {
+            state.screen = 'LOGIN';
+            render();
+            return;
+        }
+        renderTelaConta(app, headerHTML);
+    }
 
     // --- TELA: QUIZ ---
     else if (state.screen === 'QUIZ') {
         if (state.timerDeadline) {
-            iniciarCronometro(state.timerDeadline, () => finalizarSimulado(true));
+            iniciarCronometro(
+                state.timerDeadline,
+                () => finalizarSimulado(true),
+                state.simulationMode === 'full',
+            );
         }
         saveQuizProgress();
 
@@ -1092,11 +1430,17 @@ export function render() {
                 <div class="card" style="text-align: center;">
                     <div class="quiz-heading">
                         <button class="btn-quiz-exit" id="btn-sair-simulado" type="button">Sair do simulado</button>
-                        <h1>Simulado de ${state.subject.toUpperCase()}</h1>
+                        <h1>${state.simulationMode === 'full'
+                            ? `Simulado completo — ${state.editionSelected}º Exame`
+                            : `Simulado de ${escaparHTML(getSubjectLabel(state.subject))}`
+                        }</h1>
                         ${state.timerDeadline
                             ? `<div class="countdown" data-countdown role="timer" aria-label="Tempo restante para o simulado">
                                    <span>Tempo restante</span>
-                                   <strong data-timer-display>${formatarTempo(segundosRestantes(state.timerDeadline))}</strong>
+                                   <strong data-timer-display>${formatarTempo(
+                                       segundosRestantes(state.timerDeadline),
+                                       state.simulationMode === 'full',
+                                   )}</strong>
                                </div>`
                             : '<span class="timer-unlimited">Sem limite</span>'
                         }
@@ -1221,12 +1565,24 @@ export function render() {
                 }
                 saveQuizProgress();
             });
+        }).catch(erro => {
+            if (state.screen !== 'QUIZ' || state.quizFinalized) return;
+            console.error('Erro ao carregar as questões do simulado:', erro);
+            app.innerHTML = `
+                ${headerHTML}
+                <section class="card history-error">
+                    <h1>Não foi possível carregar as questões</h1>
+                    <p>${escaparHTML(erro.message || 'Tente novamente em alguns instantes.')}</p>
+                    <button class="btn-primary" id="btn-retry-questions">Tentar novamente</button>
+                </section>
+            `;
+            bindHeaderEvents(app);
+            app.querySelector('#btn-retry-questions').addEventListener('click', render);
         });
     }
 
     // --- TELA: RESULT ---
     else if (state.screen == "RESULT"){
-        console.log(userState.correctAnswers)
         if (state.currentResultIndex == undefined){
             state.currentResultIndex = 0;
         };
@@ -1356,6 +1712,19 @@ export function render() {
                 resetarTentativa();
                 render();
             });
+        }).catch(erro => {
+            if (state.screen !== 'RESULT') return;
+            console.error('Erro ao carregar as questões do resultado:', erro);
+            app.innerHTML = `
+                ${headerHTML}
+                <section class="card history-error">
+                    <h1>Não foi possível carregar a revisão</h1>
+                    <p>${escaparHTML(erro.message || 'Tente novamente em alguns instantes.')}</p>
+                    <button class="btn-primary" id="btn-retry-result">Tentar novamente</button>
+                </section>
+            `;
+            bindHeaderEvents(app);
+            app.querySelector('#btn-retry-result').addEventListener('click', render);
         });
     }
 }

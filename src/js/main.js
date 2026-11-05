@@ -5,10 +5,16 @@ import {
     restoreQuizProgress,
 } from "./quiz-progress.js";
 import { notify } from "./notifications.js";
+import { state } from "./state.js";
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
-    const quizRestaurado = restoreQuizProgress();
+    const resetToken = new URLSearchParams(window.location.search).get('reset_token');
+    if (resetToken) {
+        state.screen = 'RESET_PASSWORD';
+        state.resetToken = resetToken;
+    }
+    const quizRestaurado = state.screen !== 'RESET_PASSWORD' && restoreQuizProgress();
     protectQuizFromAccidentalExit();
     render();
     if (quizRestaurado) {

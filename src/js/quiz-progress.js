@@ -7,6 +7,7 @@ export function saveQuizProgress() {
     if (state.screen !== 'QUIZ' || state.quizFinalized) return;
 
     const progress = {
+        simulationMode: state.simulationMode,
         subject: state.subject,
         editionSelected: state.editionSelected,
         currentIndex: state.currentIndex,
@@ -40,8 +41,12 @@ export function restoreQuizProgress() {
 
     try {
         const progress = JSON.parse(rawProgress);
+        const simulationMode = progress.simulationMode || 'subject';
         const valid = progress
-            && typeof progress.subject === 'string'
+            && ['full', 'subject'].includes(simulationMode)
+            && (simulationMode === 'full'
+                ? progress.subject === null
+                : typeof progress.subject === 'string')
             && typeof progress.editionSelected === 'string'
             && Number.isInteger(progress.currentIndex)
             && progress.currentIndex >= 0
@@ -70,6 +75,7 @@ export function restoreQuizProgress() {
         if (!valid) throw new Error('Os dados salvos do simulado são inválidos.');
 
         state.screen = 'QUIZ';
+        state.simulationMode = simulationMode;
         state.subject = progress.subject;
         state.editionSelected = progress.editionSelected;
         state.currentIndex = progress.currentIndex;

@@ -5,7 +5,14 @@ export function segundosRestantes(deadline) {
     return Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
 }
 
-export function formatarTempo(segundos) {
+export function formatarTempo(segundos, mostrarHoras = false) {
+    if (mostrarHoras) {
+        const horas = Math.floor(segundos / 3600);
+        const minutos = Math.floor((segundos % 3600) / 60);
+        const restoSegundos = segundos % 60;
+        return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(restoSegundos).padStart(2, '0')}`;
+    }
+
     const minutos = Math.floor(segundos / 60);
     const restoSegundos = segundos % 60;
     return `${String(minutos).padStart(2, '0')}:${String(restoSegundos).padStart(2, '0')}`;
@@ -18,14 +25,14 @@ export function pararCronometro() {
     }
 }
 
-export function iniciarCronometro(deadline, aoEsgotar) {
+export function iniciarCronometro(deadline, aoEsgotar, mostrarHoras = false) {
     pararCronometro();
 
     const atualizar = () => {
         const restante = segundosRestantes(deadline);
         const display = document.querySelector('[data-timer-display]');
         if (display && restante !== null) {
-            display.textContent = formatarTempo(restante);
+            display.textContent = formatarTempo(restante, mostrarHoras);
             display.closest('[data-countdown]')?.classList.toggle(
                 'countdown-warning',
                 restante <= 300

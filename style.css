@@ -973,6 +973,70 @@ p {
     text-align: left;
 }
 
+.simulation-mode-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.simulation-mode-option {
+    display: grid;
+    gap: 5px;
+    min-height: 72px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.simulation-mode-option span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+}
+
+.simulation-mode-option[aria-pressed="true"] {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.16);
+}
+
+.simulation-mode-option:focus-visible {
+    outline: 2px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+.simulation-mode-help {
+    min-height: 2.8em;
+    margin: -6px 0 16px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.subject-selection {
+    display: grid;
+    gap: 8px;
+    margin: 8px 0 16px;
+    text-align: left;
+}
+
+.subject-selection[hidden] {
+    display: none;
+}
+
+.subject-selection label {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
 .timer-selection {
     display: grid;
     gap: 8px;
@@ -1699,7 +1763,7 @@ select.input-edicao {
     }
 
     .countdown span {
-        font-size: 0.68rem;
+        display: none;
     }
 
     .countdown strong {
@@ -1715,6 +1779,16 @@ select.input-edicao {
         font-size: 0.95rem;
         padding: 12px;
         min-height: 44px;
+    }
+
+    .simulation-mode-switch {
+        gap: 8px;
+    }
+
+    .simulation-mode-option {
+        min-height: 68px;
+        padding: 10px;
+        font-size: 0.9rem;
     }
 
     .quiz-actions {

@@ -1,35 +1,20 @@
 
 import { state } from "./state.js";
 import { notify } from "./notifications.js";
+import { getQuestionsForSimulation } from "./exam.js";
 
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://127.0.0.1:5000'
     : 'https://danilloteod.pythonanywhere.com';
 
-export async function loadQuestions(edicao){ // função assíncrona para filtrar as questões
-    try {
-        const response = await fetch(`/data/questoes_oab_${edicao}_tipo1.json`); // fetch: fazer pedidos de recursos externos
-
-        if (!response.ok){ // Verifica se encontrou o diretório com o arquivo
-            throw new Error(`Não foi possível carregar as questões do Exame ${edicao}. Status ${response.status}.`);
-        }
-
-        // converte a resposta bruta em um objeto array
-        const data = await response.json();
-
-        const subjectQuestions = data.questoes.filter(
-            q => q.materia === state.subject
-        );
-
-        //console.log(`Questões encontradas para ${state.subject}`, subjectQuestions);
-
-        return subjectQuestions; // retorna o array filtrado para usar na tela de QUIZ
-
-    } catch(error){
-        console.error("Erro ao carregar arquivo o JSON: ", error);
-        return [];
-    }
-};
+export async function loadQuestions(edicao){
+    const questions = await loadEditionQuestions(edicao);
+    return getQuestionsForSimulation(
+        questions,
+        state.simulationMode,
+        state.subject,
+    );
+}
 
 
 export async function login(email, senha){
@@ -107,6 +92,73 @@ export async function cadastrar(nome, email, senha) {
         };
     }
 };
+
+export async function solicitarRecuperacaoSenha(email) {
+    const resposta = await fetch(`${API_BASE_URL}/api/senha/recuperar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) {
+        throw new Error(dados.erro || 'Não foi possível solicitar a recuperação da senha.');
+    }
+    return dados;
+}
+
+export async function redefinirSenha(token, senha) {
+    const resposta = await fetch(`${API_BASE_URL}/api/senha/redefinir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, senha }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) {
+        throw new Error(dados.erro || 'Não foi possível redefinir a senha.');
+    }
+    return dados;
+}
+
+export async function carregarPerfil() {
+    const token = localStorage.getItem('token_oab');
+    if (!token) throw new Error('Faça login para gerenciar sua conta.');
+
+    const resposta = await fetch(`${API_BASE_URL}/api/perfil`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 422) {
+        localStorage.removeItem('token_oab');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('is_admin');
+    }
+    if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível carregar sua conta.');
+    return dados;
+}
+
+export async function atualizarPerfil(conta) {
+    const token = localStorage.getItem('token_oab');
+    if (!token) throw new Error('Faça login para gerenciar sua conta.');
+
+    const resposta = await fetch(`${API_BASE_URL}/api/perfil`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(conta),
+    });
+    const dados = await resposta.json();
+    if (resposta.status === 401 || resposta.status === 422) {
+        localStorage.removeItem('token_oab');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('is_admin');
+    }
+    if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível atualizar sua conta.');
+    if (dados.estudante?.nome) localStorage.setItem('user_name', dados.estudante.nome);
+    if (dados.token) localStorage.setItem('token_oab', dados.token);
+    return dados;
+}
 
 
 export async function enviarSimulado(arrayAnswers, correctAnswers, editionSelected, totalQuestions) {

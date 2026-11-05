@@ -6,6 +6,8 @@ export let userState = {
 
 export const state = {
     screen: 'HOME',
+    resetToken: null,
+    simulationMode: 'full',
     subject: null,
     test: null,
     currentIndex: 0,
@@ -14,7 +16,7 @@ export const state = {
     currentResultIndex: 0,
     totalQuestions: 0,
     arrayAnswers: [],
-    timerDurationMinutes: null,
+    timerDurationMinutes: 300,
     timerDeadline: null,
     timerExpired: false,
     quizFinalized: false,
