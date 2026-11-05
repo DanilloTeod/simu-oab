@@ -695,10 +695,18 @@ function getHeaderUsuarioHTML() {
     const nomeUsuario = estaLogado
         ? (localStorage.getItem('user_name') || 'Estudante')
         : 'Anônimo';
+    const temaRoxoAtivo = document.documentElement.dataset.theme === 'purple';
 
     return `
         <header class="top-navbar">
             <div class="navbar-content">
+                <button
+                    id="btn-theme-toggle"
+                    class="btn-theme-toggle"
+                    type="button"
+                    aria-label="${temaRoxoAtivo ? 'Ativar tema padrão' : 'Ativar tema roxo'}"
+                    aria-pressed="${temaRoxoAtivo}"
+                >${temaRoxoAtivo ? 'Tema padrão' : 'Tema roxo'}</button>
                 <span class="user-badge">👤 <strong>${escaparHTML(nomeUsuario)}</strong></span>
                 <div class="auth-buttons-header">
                     ${estaLogado ? `
@@ -721,6 +729,7 @@ function getHeaderUsuarioHTML() {
 
 // --- FUNÇÃO AUXILIAR: Gerencia os cliques da Navbar (Login, Cadastrar, Sair) ---
 function bindHeaderEvents(container) {
+    const btnTheme = container.querySelector('#btn-theme-toggle');
     const btnLogout = container.querySelector('#btn-logout');
     const btnLogin = container.querySelector('#btn-login-nav');
     const btnRegister = container.querySelector('#btn-register-nav');
@@ -730,6 +739,17 @@ function bindHeaderEvents(container) {
     const btnAdmin = container.querySelector('#btn-admin-nav');
     const btnAdminHome = container.querySelector('#btn-admin-home');
     const btnHistoryHome = container.querySelector('#btn-history-home');
+
+    if (btnTheme) {
+        btnTheme.addEventListener('click', () => {
+            const temaRoxoAtivo = document.documentElement.dataset.theme !== 'purple';
+            document.documentElement.dataset.theme = temaRoxoAtivo ? 'purple' : 'default';
+            localStorage.setItem('site_theme', temaRoxoAtivo ? 'purple' : 'default');
+            btnTheme.textContent = temaRoxoAtivo ? 'Tema padrão' : 'Tema roxo';
+            btnTheme.setAttribute('aria-label', temaRoxoAtivo ? 'Ativar tema padrão' : 'Ativar tema roxo');
+            btnTheme.setAttribute('aria-pressed', String(temaRoxoAtivo));
+        });
+    }
 
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
@@ -1681,8 +1701,8 @@ export function render() {
                                 <span class="gabarito-badge">Correta: <strong style="color: #4ade80; font-size: 1.1rem;">${qOriginalAtual.correta.toUpperCase()}</strong></span>
                             </div>
 
-                            <div class="gabarito-comentario" style="margin-top: 15px; padding: 12px; background-color: rgba(255, 255, 255, 0.03); border-radius: 6px; border-left: 3px solid #3b82f6;">
-                                <strong style="color: #60a5fa; display: block; margin-bottom: 5px;">Gabarito Detalhado:</strong>
+                            <div class="gabarito-comentario" style="margin-top: 15px; padding: 12px; background-color: rgba(255, 255, 255, 0.03); border-radius: 6px; border-left: 3px solid var(--primary);">
+                                <strong style="color: var(--accent); display: block; margin-bottom: 5px;">Gabarito Detalhado:</strong>
                                 <p style="font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; margin: 0;">${formatarComentario(qOriginalAtual.comentario)}</p>
                             </div>
                         </div>

@@ -9,6 +9,11 @@ import { state } from "./state.js";
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
+    const temaSalvo = localStorage.getItem('site_theme');
+    if (temaSalvo === 'purple') {
+        document.documentElement.dataset.theme = 'purple';
+    }
+
     const resetToken = new URLSearchParams(window.location.search).get('reset_token');
     if (resetToken) {
         state.screen = 'RESET_PASSWORD';
