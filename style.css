@@ -993,25 +993,61 @@ p {
     line-height: 1.5;
 }
 
+.quiz-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.quiz-heading h1 {
+    grid-column: 2;
+    min-width: 0;
+    margin: 0;
+    text-align: center;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
+}
+
+.quiz-progress {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 15px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
 .countdown {
+    grid-column: 3;
+    justify-self: end;
     display: inline-grid;
     justify-items: center;
-    gap: 4px;
-    margin: 0 auto 16px;
-    padding: 10px 20px;
-    border: 1px solid rgba(74, 222, 128, 0.35);
-    border-radius: 12px;
+    gap: 2px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 6px 10px;
+    border: 1px solid rgba(74, 222, 128, 0.28);
+    border-radius: 10px;
     background: rgba(15, 23, 42, 0.55);
     color: #bbf7d0;
 }
 
 .countdown span {
-    font-size: 0.8rem;
+    font-size: 0.66rem;
+    white-space: nowrap;
 }
 
 .countdown strong {
-    font-size: 1.6rem;
+    font-size: 1rem;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .countdown-warning {
@@ -1021,9 +1057,17 @@ p {
 }
 
 .timer-unlimited {
-    margin: 0 auto 16px;
-    color: var(--text-muted);
-    font-size: 0.88rem;
+    grid-column: 3;
+    justify-self: end;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.45);
+    color: #cbd5e1;
+    font-size: 0.72rem;
+    white-space: nowrap;
 }
 
 .countdown-expired {
@@ -1343,6 +1387,8 @@ select.input-edicao {
    ========================================================= */
 @media (max-width: 768px) {
     body {
+        box-sizing: border-box;
+        width: 100%;
         padding: 10px;
     }
 
@@ -1387,6 +1433,10 @@ select.input-edicao {
         justify-content: center;
     }
 
+    .auth-buttons-header button {
+        min-height: 40px;
+    }
+
     .card {
         padding: 20px 15px !important;
         width: 100% !important;
@@ -1411,6 +1461,10 @@ select.input-edicao {
     .history-heading {
         flex-direction: column;
         gap: 12px;
+    }
+
+    .history-heading-actions {
+        width: 100%;
     }
 
     .history-run-summary,
@@ -1475,10 +1529,35 @@ select.input-edicao {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .admin-stat {
+        min-width: 0;
+        padding: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-user-create,
+    .admin-online-users {
+        padding: 14px;
+    }
+
+    .admin-user-form,
+    .admin-user-edit-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-user-actions > button {
+        min-height: 42px;
+    }
+
     .admin-student > summary,
     .admin-simulation > summary {
         align-items: flex-start;
         padding: 12px;
+    }
+
+    .admin-student > summary {
+        flex-direction: column;
+        gap: 8px;
     }
 
     .painel-detalhe {
@@ -1489,9 +1568,147 @@ select.input-edicao {
         font-size: 1.5rem !important;
     }
 
+    .quiz-heading {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 8px;
+    }
+
+    .quiz-heading h1 {
+        grid-column: 1;
+        grid-row: 1;
+        font-size: clamp(1rem, 4.5vw, 1.35rem) !important;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    .countdown,
+    .timer-unlimited {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: end;
+    }
+
+    .countdown {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 9px;
+    }
+
+    .countdown span {
+        font-size: 0.68rem;
+    }
+
+    .countdown strong {
+        font-size: 1rem;
+    }
+
+    .timer-unlimited {
+        padding: 6px 8px;
+        font-size: 0.68rem;
+    }
+
     .btn-materia, .btn-primary {
         font-size: 0.95rem;
         padding: 12px;
+        min-height: 44px;
+    }
+
+    .enunciado,
+    .gabarito-enunciado,
+    .gabarito-alternativas {
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+
+    .gabarito-rodape {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .grid-botoes {
+        grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 8px;
+    }
+
+    .top-navbar {
+        margin-bottom: 12px;
+    }
+
+    .navbar-content {
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 16px;
+    }
+
+    .user-badge {
+        width: 100%;
+        text-align: center;
+    }
+
+    .auth-buttons-header {
+        width: 100%;
+    }
+
+    .auth-buttons-header button {
+        flex: 1 1 auto;
+    }
+
+    .card {
+        padding: 18px 12px !important;
+        border-radius: 10px;
+    }
+
+    .admin-stats {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-students-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-user-actions {
+        flex-direction: column;
+    }
+
+    .admin-user-actions > button,
+    .admin-user-edit {
+        width: 100%;
+    }
+
+    .history-run-toggle {
+        min-width: 0;
+        text-align: left;
+    }
+
+    .history-run-summary-meta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .history-score {
+        justify-items: start;
+    }
+
+    .confirmation-dialog {
+        padding: 18px;
+    }
+
+    .confirmation-actions {
+        flex-direction: column-reverse;
+    }
+
+    .confirmation-actions button {
+        width: 100%;
+        min-height: 44px;
     }
 }
 /* =========================================================

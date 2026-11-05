@@ -1,9 +1,19 @@
 import { render } from "./views.js";
 import { atualizarPresenca } from "./api.js";
+import {
+    protectQuizFromAccidentalExit,
+    restoreQuizProgress,
+} from "./quiz-progress.js";
+import { notify } from "./notifications.js";
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
+    const quizRestaurado = restoreQuizProgress();
+    protectQuizFromAccidentalExit();
     render();
+    if (quizRestaurado) {
+        notify('Seu simulado foi restaurado de onde você parou.', 'info');
+    }
     const indicadorOnline = document.getElementById('online-students');
     const registrarPresenca = () => {
         if (document.visibilityState !== 'visible') return;

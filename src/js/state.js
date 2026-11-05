@@ -18,4 +18,5 @@ export const state = {
     timerDeadline: null,
     timerExpired: false,
     quizFinalized: false,
+    selectedAnswer: null,
 };

@@ -26,6 +26,10 @@ import {
     pararCronometro,
     segundosRestantes,
 } from "./timer.js";
+import {
+    clearQuizProgress,
+    saveQuizProgress,
+} from "./quiz-progress.js";
 
 let adminRefreshTimer = null;
 
@@ -48,6 +52,8 @@ function resetarTentativa() {
     state.timerDeadline = null;
     state.timerExpired = false;
     state.quizFinalized = false;
+    state.selectedAnswer = null;
+    clearQuizProgress();
 }
 
 function finalizarSimulado(tempoEsgotado = false) {
@@ -56,6 +62,7 @@ function finalizarSimulado(tempoEsgotado = false) {
     state.quizFinalized = true;
     state.timerExpired = tempoEsgotado;
     pararCronometro();
+    clearQuizProgress();
     if (tempoEsgotado) {
         notify('O tempo acabou. Confira as questões que você conseguiu responder.', 'info');
     }
@@ -784,7 +791,6 @@ export function render() {
         window.clearTimeout(adminRefreshTimer);
         adminRefreshTimer = null;
     }
-    let choice = null;
     const app = document.getElementById('app');
     app.classList.toggle('history-screen', state.screen === 'HISTORY' || state.screen === 'ADMIN');
     const headerHTML = getHeaderUsuarioHTML();
@@ -884,9 +890,7 @@ export function render() {
                     ? null
                     : Date.now() + state.timerDurationMinutes * 60_000;
                 state.screen = 'QUIZ';
-                if (state.timerDeadline) {
-                    iniciarCronometro(state.timerDeadline, () => finalizarSimulado(true));
-                }
+                saveQuizProgress();
                 render();
             }
         });
@@ -1056,6 +1060,11 @@ export function render() {
 
     // --- TELA: QUIZ ---
     else if (state.screen === 'QUIZ') {
+        if (state.timerDeadline) {
+            iniciarCronometro(state.timerDeadline, () => finalizarSimulado(true));
+        }
+        saveQuizProgress();
+
         loadQuestions(state.editionSelected).then(questoes => {
             if (state.screen !== 'QUIZ' || state.quizFinalized) return;
 
@@ -1080,15 +1089,17 @@ export function render() {
             app.innerHTML = `
                 ${headerHTML}
                 <div class="card" style="text-align: center;">
-                    <h1>Simulado de ${state.subject.toUpperCase()}</h1>
-                    ${state.timerDeadline
-                        ? `<div class="countdown" data-countdown role="timer" aria-label="Tempo restante para o simulado">
-                               <span>Tempo restante</span>
-                               <strong data-timer-display>${formatarTempo(segundosRestantes(state.timerDeadline))}</strong>
-                           </div>`
-                        : '<p class="timer-unlimited">Simulado sem limite de tempo</p>'
-                    }
-                    <span style="display: inline-block; padding: 4px 12px; background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; font-size: 0.85rem; margin-bottom: 15px;">
+                    <div class="quiz-heading">
+                        <h1>Simulado de ${state.subject.toUpperCase()}</h1>
+                        ${state.timerDeadline
+                            ? `<div class="countdown" data-countdown role="timer" aria-label="Tempo restante para o simulado">
+                                   <span>Tempo restante</span>
+                                   <strong data-timer-display>${formatarTempo(segundosRestantes(state.timerDeadline))}</strong>
+                               </div>`
+                            : '<span class="timer-unlimited">Sem limite</span>'
+                        }
+                    </div>
+                    <span class="quiz-progress">
                         ${state.currentIndex + 1} / ${questoes.length}
                     </span>
                     <div id="container-question">Carregando questões...</div>
@@ -1098,7 +1109,6 @@ export function render() {
             bindHeaderEvents(app);
 
             const container = document.getElementById('container-question');
-            choice = null;
             state.totalQuestions = questoes.length;
             const questao = questoes[state.currentIndex];
             const letters = ['a', 'b', 'c', 'd'];
@@ -1106,7 +1116,7 @@ export function render() {
 
             letters.forEach(letter => {
                 buttonsHTML += `
-                <button class="btn-alternativa" data-letra="${letter}">
+                <button class="btn-alternativa ${state.selectedAnswer === letter ? 'ativo' : ''}" data-letra="${letter}">
                     <strong>${letter.toUpperCase()}.</strong> ${questao.alternativas[letter]}
                 </button>
                 `;
@@ -1125,18 +1135,19 @@ export function render() {
                 botao.addEventListener('click', (e) => {
                     choiceButton.forEach(b => b.classList.remove('ativo'));
                     e.currentTarget.classList.add('ativo');
-                    choice = e.currentTarget.getAttribute('data-letra');
+                    state.selectedAnswer = e.currentTarget.getAttribute('data-letra');
+                    saveQuizProgress();
                 });
             });
 
             const confirm = app.querySelector('#btn-confirmar');
             confirm.addEventListener("click", () => {
-                if (choice === null){
+                if (state.selectedAnswer === null){
                     notify('Escolha uma alternativa para continuar.', 'error');
                     return;
                 };
 
-                userState.answers.push(choice);
+                userState.answers.push(state.selectedAnswer);
                 userState.questionId.push(questao.id);
                 
                 let acertou = false;
@@ -1149,11 +1160,13 @@ export function render() {
                 state.arrayAnswers.push({
                     question_id: questao.id,
                     subject: questao.materia,
-                    selected_option: choice,
+                    selected_option: state.selectedAnswer,
                     is_correct: acertou
                 });
 
                 state.currentIndex++;
+                state.selectedAnswer = null;
+                saveQuizProgress();
                 render();
             });
         });
