@@ -7,7 +7,11 @@ import {
     cadastrar,
     historico,
     carregarPainelAdmin,
-    atualizarPresenca
+    atualizarPresenca,
+    criarUsuarioAdmin,
+    atualizarPermissaoAdmin,
+    editarUsuarioAdmin,
+    excluirUsuarioAdmin
 } from "./api.js";
 
 let adminRefreshTimer = null;
@@ -293,7 +297,24 @@ function renderSimuladoAdmin(simulado, questoes) {
     `;
 }
 
-function atualizarResumoPainelAdmin(app, resumo) {
+function renderUsuariosOnline(usuarios) {
+    if (!usuarios.length) {
+        return '<p class="history-unavailable">Nenhuma conta com atividade recente.</p>';
+    }
+
+    return `<ul class="admin-online-list">
+        ${usuarios.map(usuario => `
+            <li>
+                <strong>${escaparHTML(usuario.name)}</strong>
+                <span>${escaparHTML(usuario.email)}</span>
+                <time datetime="${escaparHTML(usuario.last_activity)}">Ativo em ${escaparHTML(formatarDataHistorico(usuario.last_activity))}</time>
+            </li>
+        `).join('')}
+    </ul>`;
+}
+
+function atualizarResumoPainelAdmin(app, painel) {
+    const resumo = painel.summary;
     const valores = {
         students: resumo.total_students,
         simulations: resumo.total_simulations,
@@ -312,6 +333,25 @@ function atualizarResumoPainelAdmin(app, resumo) {
         notaOnline.textContent =
             `Online = atividade nos últimos ${Math.round(resumo.online_window_seconds / 60)} minutos. Contagens atualizadas automaticamente.`;
     }
+
+    const listaOnline = app.querySelector('[data-admin-online-users]');
+    if (listaOnline) listaOnline.innerHTML = renderUsuariosOnline(painel.online_users);
+
+    for (const estudante of painel.students) {
+        const item = app.querySelector(`[data-admin-user="${estudante.id}"]`);
+        if (!item) continue;
+        const status = item.querySelector('[data-admin-user-status]');
+        if (status) status.textContent = estudante.online ? 'Online' : 'Offline';
+        const role = item.querySelector('[data-admin-user-role]');
+        if (role) role.textContent = estudante.is_admin ? 'Administrador' : 'Estudante';
+        const roleButton = item.querySelector('[data-user-action="role"]');
+        if (roleButton) {
+            roleButton.dataset.userAdmin = String(estudante.is_admin);
+            roleButton.textContent = estudante.is_admin
+                ? 'Remover administrador'
+                : 'Tornar administrador';
+        }
+    }
 }
 
 function agendarAtualizacaoResumoAdmin(app) {
@@ -321,7 +361,7 @@ function agendarAtualizacaoResumoAdmin(app) {
         try {
             const painel = await carregarPainelAdmin();
             if (state.screen === 'ADMIN' && app.isConnected) {
-                atualizarResumoPainelAdmin(app, painel.summary);
+                atualizarResumoPainelAdmin(app, painel);
             }
         } catch (erro) {
             console.error('Erro ao atualizar os indicadores do painel administrativo:', erro);
@@ -391,6 +431,33 @@ async function renderTelaAdmin(app, headerHTML) {
                     <article class="admin-stat admin-stat-online"><span>Alunos logados online</span><strong data-admin-stat="onlineStudents">${escaparHTML(resumo.online_students)}</strong></article>
                     <article class="admin-stat admin-stat-anonymous"><span>Anônimos online</span><strong data-admin-stat="onlineAnonymous">${escaparHTML(resumo.online_anonymous)}</strong></article>
                 </div>
+                <section class="admin-online-users" aria-labelledby="admin-online-title">
+                    <div class="admin-students-heading">
+                        <h2 id="admin-online-title">Contas online</h2>
+                        <span>Atividade recente</span>
+                    </div>
+                    <div data-admin-online-users>${renderUsuariosOnline(painel.online_users)}</div>
+                </section>
+                <section class="admin-user-create" aria-labelledby="admin-create-title">
+                    <h2 id="admin-create-title">Criar conta</h2>
+                    <form id="admin-create-user" class="admin-user-form">
+                        <label>Nome
+                            <input name="nome" type="text" maxlength="120" autocomplete="name" required>
+                        </label>
+                        <label>Email
+                            <input name="email" type="email" maxlength="150" autocomplete="email" required>
+                        </label>
+                        <label>Senha inicial
+                            <input name="senha" type="password" minlength="8" autocomplete="new-password" required>
+                        </label>
+                        <label class="admin-checkbox-label">
+                            <input name="is_admin" type="checkbox">
+                            Criar como administrador
+                        </label>
+                        <button class="btn-primary" type="submit">Criar conta</button>
+                    </form>
+                    <p class="admin-online-note">A senha inicial deve ser compartilhada com segurança com a pessoa cadastrada.</p>
+                </section>
                 <div class="admin-students-heading">
                     <h2>Alunos</h2>
                     <span>${painel.students.length} cadastrados</span>
@@ -398,15 +465,42 @@ async function renderTelaAdmin(app, headerHTML) {
                 ${painel.students.length
                     ? `<div class="admin-student-list">
                            ${painel.students.map(estudante => `
-                               <details class="admin-student">
+                               <details class="admin-student" data-admin-user="${estudante.id}">
                                    <summary>
                                        <span class="admin-student-identity">
                                            <strong>${escaparHTML(estudante.name)}</strong>
                                            <span>${escaparHTML(estudante.email)}</span>
+                                           <span class="admin-user-badges">
+                                               <span data-admin-user-status>${estudante.online ? 'Online' : 'Offline'}</span>
+                                               <span data-admin-user-role>${estudante.is_admin ? 'Administrador' : 'Estudante'}</span>
+                                           </span>
                                        </span>
                                        <span class="admin-student-count">${estudante.simulations.length} simulados</span>
                                    </summary>
                                    <div class="admin-student-content">
+                                       <div class="admin-user-actions">
+                                           <button class="btn-nav-outline" type="button" data-user-action="role" data-user-id="${estudante.id}" data-user-admin="${estudante.is_admin}">
+                                               ${estudante.is_admin ? 'Remover administrador' : 'Tornar administrador'}
+                                           </button>
+                                           <button class="btn-nav-outline admin-delete-user" type="button" data-user-action="delete" data-user-id="${estudante.id}" data-user-name="${escaparHTML(estudante.name)}">
+                                               Excluir conta
+                                           </button>
+                                           <details class="admin-user-edit">
+                                               <summary>Editar conta</summary>
+                                               <form class="admin-user-edit-form" data-user-id="${estudante.id}">
+                                                   <label>Nome
+                                                       <input name="nome" type="text" maxlength="120" value="${escaparHTML(estudante.name)}" required>
+                                                   </label>
+                                                   <label>Email
+                                                       <input name="email" type="email" maxlength="150" value="${escaparHTML(estudante.email)}" required>
+                                                   </label>
+                                                   <label>Nova senha (opcional)
+                                                       <input name="senha" type="password" minlength="8" autocomplete="new-password">
+                                                   </label>
+                                                   <button class="btn-nav-outline" type="submit">Salvar alterações</button>
+                                               </form>
+                                           </details>
+                                       </div>
                                        ${estudante.simulations.map(simulado =>
                                            renderSimuladoAdmin(
                                                simulado,
@@ -424,6 +518,69 @@ async function renderTelaAdmin(app, headerHTML) {
         `;
         bindHeaderEvents(app);
         app.querySelector('#btn-admin-refresh').addEventListener('click', render);
+        app.querySelector('#admin-create-user').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const dados = new FormData(form);
+            try {
+                await criarUsuarioAdmin({
+                    nome: dados.get('nome'),
+                    email: dados.get('email'),
+                    senha: dados.get('senha'),
+                    is_admin: dados.get('is_admin') === 'on',
+                });
+                alert('Conta criada com sucesso.');
+                render();
+            } catch (erro) {
+                alert(erro.message || 'Não foi possível criar a conta.');
+            }
+        });
+        app.querySelector('.admin-student-list')?.addEventListener('click', async event => {
+            const botao = event.target.closest('[data-user-action]');
+            if (!botao) return;
+
+            const id = Number(botao.dataset.userId);
+            try {
+                if (botao.dataset.userAction === 'role') {
+                    const isAdmin = botao.dataset.userAdmin !== 'true';
+                    await atualizarPermissaoAdmin(id, isAdmin);
+                    alert(isAdmin
+                        ? 'Permissão de administrador concedida.'
+                        : 'Permissão de administrador removida.');
+                } else if (botao.dataset.userAction === 'delete') {
+                    const nome = botao.dataset.userName;
+                    if (!window.confirm(
+                        `Excluir a conta de ${nome}? Os dados pessoais serão removidos e os simulados serão mantidos anonimizados.`
+                    )) return;
+                    await excluirUsuarioAdmin(id);
+                    alert('Conta excluída e dados pessoais anonimizados.');
+                }
+                render();
+            } catch (erro) {
+                alert(erro.message || 'Não foi possível atualizar a conta.');
+            }
+        });
+        app.querySelector('.admin-student-list')?.addEventListener('submit', async event => {
+            const form = event.target.closest('.admin-user-edit-form');
+            if (!form) return;
+            event.preventDefault();
+
+            const dados = new FormData(form);
+            const usuario = {
+                nome: dados.get('nome'),
+                email: dados.get('email'),
+            };
+            const senha = dados.get('senha');
+            if (senha) usuario.senha = senha;
+
+            try {
+                await editarUsuarioAdmin(Number(form.dataset.userId), usuario);
+                alert('Dados da conta atualizados.');
+                render();
+            } catch (erro) {
+                alert(erro.message || 'Não foi possível atualizar os dados da conta.');
+            }
+        });
         agendarAtualizacaoResumoAdmin(app);
     } catch (erro) {
         if (state.screen !== 'ADMIN') return;

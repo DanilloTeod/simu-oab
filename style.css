@@ -547,6 +547,148 @@ body {
     color: #93c5fd;
 }
 
+.admin-online-users,
+.admin-user-create {
+    margin-top: 24px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.25);
+}
+
+.admin-online-users .admin-students-heading,
+.admin-user-create h2 {
+    margin-top: 0;
+}
+
+.admin-online-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.admin-online-list li {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+
+.admin-online-list li span,
+.admin-online-list li time {
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+.admin-user-create h2 {
+    font-size: 1.15rem;
+}
+
+.admin-user-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: end;
+    gap: 12px;
+}
+
+.admin-user-form label {
+    display: grid;
+    gap: 6px;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.admin-user-form input:not([type="checkbox"]) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: #0f172a;
+    color: var(--text-main);
+    font: inherit;
+}
+
+.admin-user-form .admin-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+}
+
+.admin-user-form .btn-primary {
+    width: 100%;
+}
+
+.admin-user-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-user-badges > span {
+    width: fit-content;
+    padding: 2px 8px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 999px;
+}
+
+.admin-user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.admin-user-edit {
+    flex-basis: 100%;
+}
+
+.admin-user-edit > summary {
+    width: fit-content;
+    color: #93c5fd;
+    cursor: pointer;
+    font-size: 0.88rem;
+}
+
+.admin-user-edit-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.admin-user-edit-form label {
+    display: grid;
+    gap: 6px;
+    color: #cbd5e1;
+    font-size: 0.82rem;
+}
+
+.admin-user-edit-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: #0f172a;
+    color: var(--text-main);
+    font: inherit;
+}
+
+.admin-delete-user {
+    border-color: rgba(248, 113, 113, 0.45);
+    color: #fca5a5;
+}
+
 .admin-students-heading {
     display: flex;
     justify-content: space-between;

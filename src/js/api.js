@@ -245,6 +245,59 @@ export async function carregarPainelAdmin() {
     return dados;
 }
 
+async function requisicaoAdmin(path, options = {}) {
+    const token = localStorage.getItem('token_oab');
+    if (!token) throw new Error('Faça login para acessar o painel administrativo.');
+
+    const resposta = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...options.headers,
+        },
+    });
+    const dados = await resposta.json();
+
+    if (resposta.status === 401 || resposta.status === 422) {
+        localStorage.removeItem('token_oab');
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('is_admin');
+    }
+    if (!resposta.ok) {
+        throw new Error(dados.erro || 'Não foi possível concluir a ação administrativa.');
+    }
+
+    return dados;
+}
+
+export async function criarUsuarioAdmin(usuario) {
+    return requisicaoAdmin('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(usuario),
+    });
+}
+
+export async function atualizarPermissaoAdmin(id, isAdmin) {
+    return requisicaoAdmin(`/api/admin/users/${encodeURIComponent(id)}/role`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_admin: isAdmin }),
+    });
+}
+
+export async function editarUsuarioAdmin(id, usuario) {
+    return requisicaoAdmin(`/api/admin/users/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(usuario),
+    });
+}
+
+export async function excluirUsuarioAdmin(id) {
+    return requisicaoAdmin(`/api/admin/users/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+    });
+}
+
 export async function loadEditionQuestions(edicao) {
     const response = await fetch(`/data/questoes_oab_${edicao}_tipo1.json`);
     if (!response.ok) {
