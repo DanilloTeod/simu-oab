@@ -18,6 +18,7 @@ export function saveQuizProgress() {
         timerDurationMinutes: state.timerDurationMinutes,
         timerDeadline: state.timerDeadline,
         selectedAnswer: state.selectedAnswer,
+        answerRevealed: state.answerRevealed,
     };
 
     try {
@@ -61,6 +62,8 @@ export function restoreQuizProgress() {
             && progress.questionId.every(id => Number.isInteger(id))
             && (progress.selectedAnswer === null
                 || validAnswers.has(progress.selectedAnswer))
+            && (progress.answerRevealed === undefined
+                || typeof progress.answerRevealed === 'boolean')
             && (progress.timerDeadline === null
                 || Number.isFinite(progress.timerDeadline));
 
@@ -78,6 +81,7 @@ export function restoreQuizProgress() {
         state.selectedAnswer = progress.selectedAnswer;
         state.timerExpired = false;
         state.quizFinalized = false;
+        state.answerRevealed = progress.answerRevealed === true;
 
         userState.answers = progress.answers;
         userState.questionId = progress.questionId;

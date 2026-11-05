@@ -53,6 +53,7 @@ function resetarTentativa() {
     state.timerExpired = false;
     state.quizFinalized = false;
     state.selectedAnswer = null;
+    state.answerRevealed = false;
     clearQuizProgress();
 }
 
@@ -1090,6 +1091,7 @@ export function render() {
                 ${headerHTML}
                 <div class="card" style="text-align: center;">
                     <div class="quiz-heading">
+                        <button class="btn-quiz-exit" id="btn-sair-simulado" type="button">Sair do simulado</button>
                         <h1>Simulado de ${state.subject.toUpperCase()}</h1>
                         ${state.timerDeadline
                             ? `<div class="countdown" data-countdown role="timer" aria-label="Tempo restante para o simulado">
@@ -1099,19 +1101,44 @@ export function render() {
                             : '<span class="timer-unlimited">Sem limite</span>'
                         }
                     </div>
-                    <span class="quiz-progress">
-                        ${state.currentIndex + 1} / ${questoes.length}
-                    </span>
+                    <div class="quiz-session-controls">
+                        <span class="quiz-progress">
+                            ${state.currentIndex + 1} / ${questoes.length}
+                        </span>
+                    </div>
                     <div id="container-question">Carregando questões...</div>
                 </div>
             `;
 
             bindHeaderEvents(app);
 
+            app.querySelector('#btn-sair-simulado').addEventListener('click', async () => {
+                const confirmou = await confirmAction({
+                    title: 'Sair do simulado?',
+                    message: 'Seu progresso atual será descartado e você voltará à página inicial.',
+                    confirmLabel: 'Sair do simulado',
+                    danger: true,
+                });
+                if (!confirmou) return;
+
+                state.screen = 'HOME';
+                state.subject = null;
+                resetarTentativa();
+                notify('Você saiu do simulado. Seu progresso foi descartado.', 'info');
+                render();
+            });
+
             const container = document.getElementById('container-question');
             state.totalQuestions = questoes.length;
             const questao = questoes[state.currentIndex];
             const letters = ['a', 'b', 'c', 'd'];
+            const correta = String(questao.correta || '').toLowerCase();
+            const alternativaCorreta = questao.alternativas?.[correta];
+            const respostaHTML = `
+                <strong>Resposta correta: ${escaparHTML(correta.toUpperCase())}.</strong>
+                ${alternativaCorreta ? `<p>${escaparHTML(alternativaCorreta)}</p>` : ''}
+                <div>${formatarComentario(questao.comentario)}</div>
+            `;
             let buttonsHTML = '';
 
             letters.forEach(letter => {
@@ -1127,7 +1154,15 @@ export function render() {
             <div class="container-alternativas">
                 ${buttonsHTML}
             </div>
-            <button class="btn-primary" id="btn-confirmar" style="margin-top: 20px;">Confirmar</button>
+            <div class="quiz-actions">
+                <button class="btn-quiz-reveal" id="btn-ver-resposta" type="button" aria-expanded="${state.answerRevealed}" aria-controls="resposta-correta">
+                    ${state.answerRevealed ? 'Ocultar resposta' : 'Ver resposta'}
+                </button>
+                <button class="btn-primary" id="btn-confirmar" type="button">Confirmar resposta</button>
+            </div>
+            <section class="quiz-answer" id="resposta-correta" aria-live="polite" ${state.answerRevealed ? '' : 'hidden'}>
+                ${state.answerRevealed ? respostaHTML : ''}
+            </section>
             `;
 
             const choiceButton = container.querySelectorAll(".btn-alternativa");
@@ -1166,8 +1201,25 @@ export function render() {
 
                 state.currentIndex++;
                 state.selectedAnswer = null;
+                state.answerRevealed = false;
                 saveQuizProgress();
                 render();
+            });
+
+            const revealButton = app.querySelector('#btn-ver-resposta');
+            const answerPanel = app.querySelector('#resposta-correta');
+            revealButton.addEventListener('click', () => {
+                state.answerRevealed = !state.answerRevealed;
+                answerPanel.hidden = !state.answerRevealed;
+                revealButton.textContent = state.answerRevealed
+                    ? 'Ocultar resposta'
+                    : 'Ver resposta';
+                revealButton.setAttribute('aria-expanded', String(state.answerRevealed));
+
+                if (state.answerRevealed) {
+                    answerPanel.innerHTML = respostaHTML;
+                }
+                saveQuizProgress();
             });
         });
     }

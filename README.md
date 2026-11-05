@@ -9,6 +9,7 @@ Aplicação web para praticar questões da 1ª fase do Exame de Ordem da OAB. O 
 
 - Seleção de matéria e edição do exame.
 - Simulado opcionalmente cronometrado, com limite de 30 a 60 minutos ou sem cronômetro.
+- Opção para revelar e ocultar a resposta correta e o comentário de cada questão durante o simulado.
 - Confirmação do navegador ao tentar sair durante o simulado e restauração do progresso após recarregar a página.
 - Resolução de questões e visualização do resultado.
 - Cadastro e login de estudantes.

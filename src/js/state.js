@@ -19,4 +19,5 @@ export const state = {
     timerExpired: false,
     quizFinalized: false,
     selectedAnswer: null,
+    answerRevealed: false,
 };
