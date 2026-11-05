@@ -1059,7 +1059,7 @@ p {
 
 .quiz-heading {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
     align-items: center;
     column-gap: 8px;
     width: 100%;
@@ -1069,6 +1069,7 @@ p {
 .quiz-heading h1 {
     grid-column: 2;
     min-width: 0;
+    width: 100%;
     margin: 0;
     text-align: center;
     overflow-wrap: break-word;
@@ -1937,6 +1938,16 @@ select.input-edicao {
 .rodape-site a {
     color: inherit;
     text-decoration: none;
+}
+
+.rodape-site .support-email-link {
+    color: #93c5fd;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.rodape-site .support-email-link:hover {
+    color: #bfdbfe;
 }
 
 .rodape-site a:hover img, 
