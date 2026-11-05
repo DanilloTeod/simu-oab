@@ -14,6 +14,7 @@ Aplicação web para praticar questões da 1ª fase do Exame de Ordem da OAB. O 
 - Histórico com revisão de questões, gabaritos e comentários.
 - Painel administrativo com contas online, criação e edição de usuários.
 - Gestão de permissões de administrador e exclusão com anonimização de dados pessoais.
+- Notificações acessíveis, mensagens de validação junto aos campos e confirmações para ações destrutivas.
 - Layout responsivo e interface construída sem frameworks de frontend.
 
 ## Tecnologias

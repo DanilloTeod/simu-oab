@@ -13,6 +13,13 @@ import {
     editarUsuarioAdmin,
     excluirUsuarioAdmin
 } from "./api.js";
+import {
+    clearFieldErrors,
+    confirmAction,
+    notify,
+    setFieldError,
+    withButtonLoading,
+} from "./notifications.js";
 
 let adminRefreshTimer = null;
 
@@ -47,6 +54,33 @@ function escaparHTML(valor) {
         '"': '&quot;',
         "'": '&#39;'
     })[caractere]);
+}
+
+function mostrarErroDeFormulario(form, message) {
+    const texto = String(message || 'Confira os dados informados e tente novamente.');
+    if (/email ou senha|credenciais/i.test(texto)) {
+        form.querySelector('.form-error')?.remove();
+        const error = document.createElement('p');
+        error.className = 'form-error';
+        error.setAttribute('role', 'alert');
+        error.textContent = texto;
+        form.prepend(error);
+        return;
+    }
+
+    const campo = /email/i.test(texto)
+        ? form.querySelector('[name="email"], #login-email')
+        : /senha/i.test(texto)
+            ? form.querySelector('[name="senha"], #login-password, #register-password')
+            : /nome/i.test(texto)
+                ? form.querySelector('[name="nome"], #register-name')
+                : null;
+
+    if (campo) {
+        setFieldError(campo, texto);
+    } else {
+        notify(texto, 'error');
+    }
 }
 
 function formatarDataHistorico(data) {
@@ -521,49 +555,65 @@ async function renderTelaAdmin(app, headerHTML) {
         app.querySelector('#admin-create-user').addEventListener('submit', async event => {
             event.preventDefault();
             const form = event.currentTarget;
+            clearFieldErrors(form);
             const dados = new FormData(form);
-            try {
-                await criarUsuarioAdmin({
-                    nome: dados.get('nome'),
-                    email: dados.get('email'),
-                    senha: dados.get('senha'),
-                    is_admin: dados.get('is_admin') === 'on',
-                });
-                alert('Conta criada com sucesso.');
-                render();
-            } catch (erro) {
-                alert(erro.message || 'Não foi possível criar a conta.');
-            }
+            const button = form.querySelector('[type="submit"]');
+            await withButtonLoading(button, async () => {
+                try {
+                    await criarUsuarioAdmin({
+                        nome: dados.get('nome'),
+                        email: dados.get('email'),
+                        senha: dados.get('senha'),
+                        is_admin: dados.get('is_admin') === 'on',
+                    });
+                    notify('Conta criada com sucesso.', 'success');
+                    render();
+                } catch (erro) {
+                    mostrarErroDeFormulario(form, erro.message || 'Não foi possível criar a conta.');
+                }
+            }, 'Criando...');
         });
         app.querySelector('.admin-student-list')?.addEventListener('click', async event => {
             const botao = event.target.closest('[data-user-action]');
             if (!botao) return;
 
             const id = Number(botao.dataset.userId);
-            try {
-                if (botao.dataset.userAction === 'role') {
-                    const isAdmin = botao.dataset.userAdmin !== 'true';
-                    await atualizarPermissaoAdmin(id, isAdmin);
-                    alert(isAdmin
-                        ? 'Permissão de administrador concedida.'
-                        : 'Permissão de administrador removida.');
-                } else if (botao.dataset.userAction === 'delete') {
-                    const nome = botao.dataset.userName;
-                    if (!window.confirm(
-                        `Excluir a conta de ${nome}? Os dados pessoais serão removidos e os simulados serão mantidos anonimizados.`
-                    )) return;
-                    await excluirUsuarioAdmin(id);
-                    alert('Conta excluída e dados pessoais anonimizados.');
-                }
-                render();
-            } catch (erro) {
-                alert(erro.message || 'Não foi possível atualizar a conta.');
+            if (botao.dataset.userAction === 'delete') {
+                const confirmou = await confirmAction({
+                    title: `Excluir a conta de ${botao.dataset.userName}?`,
+                    message: 'Os dados pessoais serão removidos. Os simulados serão mantidos anonimizados, e a conta não poderá mais entrar.',
+                    confirmLabel: 'Excluir conta',
+                    danger: true,
+                });
+                if (!confirmou) return;
             }
+
+            await withButtonLoading(botao, async () => {
+                try {
+                    if (botao.dataset.userAction === 'role') {
+                        const isAdmin = botao.dataset.userAdmin !== 'true';
+                        await atualizarPermissaoAdmin(id, isAdmin);
+                        notify(
+                            isAdmin
+                                ? 'Permissão de administrador concedida.'
+                                : 'Permissão de administrador removida.',
+                            'success'
+                        );
+                    } else if (botao.dataset.userAction === 'delete') {
+                        await excluirUsuarioAdmin(id);
+                        notify('Conta excluída e dados pessoais anonimizados.', 'success');
+                    }
+                    render();
+                } catch (erro) {
+                    notify(erro.message || 'Não foi possível atualizar a conta.', 'error');
+                }
+            }, botao.dataset.userAction === 'delete' ? 'Excluindo...' : 'Salvando...');
         });
         app.querySelector('.admin-student-list')?.addEventListener('submit', async event => {
             const form = event.target.closest('.admin-user-edit-form');
             if (!form) return;
             event.preventDefault();
+            clearFieldErrors(form);
 
             const dados = new FormData(form);
             const usuario = {
@@ -573,13 +623,16 @@ async function renderTelaAdmin(app, headerHTML) {
             const senha = dados.get('senha');
             if (senha) usuario.senha = senha;
 
-            try {
-                await editarUsuarioAdmin(Number(form.dataset.userId), usuario);
-                alert('Dados da conta atualizados.');
-                render();
-            } catch (erro) {
-                alert(erro.message || 'Não foi possível atualizar os dados da conta.');
-            }
+            const button = form.querySelector('[type="submit"]');
+            await withButtonLoading(button, async () => {
+                try {
+                    await editarUsuarioAdmin(Number(form.dataset.userId), usuario);
+                    notify('Dados da conta atualizados.', 'success');
+                    render();
+                } catch (erro) {
+                    mostrarErroDeFormulario(form, erro.message || 'Não foi possível atualizar os dados da conta.');
+                }
+            }, 'Salvando...');
         });
         agendarAtualizacaoResumoAdmin(app);
     } catch (erro) {
@@ -648,7 +701,7 @@ function bindHeaderEvents(container) {
             atualizarPresenca().catch(erro => {
                 console.error('Erro ao atualizar presença após sair:', erro);
             });
-            alert('Você saiu da sua conta.');
+            notify('Você saiu da sua conta.', 'info');
             render();
         });
     }
@@ -770,7 +823,7 @@ export function render() {
 
         start.addEventListener("click", () => {
             if (state.subject === null) {
-                alert("Escolha ao menos uma Disciplina!");
+                notify('Escolha uma disciplina para iniciar o simulado.', 'error');
             } else {
                 resetarTentativa();
                 state.screen = 'QUIZ';
@@ -796,7 +849,7 @@ export function render() {
 
                     <div class="form-group">
                         <label for="login-password">Senha</label>
-                        <input type="password" id="login-password" class="input-edicao" placeholder="••••••••" required>
+                        <input type="password" id="login-password" class="input-edicao" placeholder="••••••••" autocomplete="current-password" required>
                     </div>
 
                     <button type="submit" class="btn-primary btn-full">Entrar</button>
@@ -829,16 +882,23 @@ export function render() {
             render();
         });
 
+        formLogin.addEventListener('input', () => clearFieldErrors(formLogin));
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = app.querySelector('#login-email').value;
             const senha = app.querySelector('#login-password').value;
 
-            const sucesso = await login(email, senha);
-            if (sucesso) {
-                state.screen = 'HOME';
-                render();
-            }
+            const button = formLogin.querySelector('[type="submit"]');
+            await withButtonLoading(button, async () => {
+                const resultado = await login(email, senha);
+                if (resultado.sucesso) {
+                    notify('Bem-vindo de volta!', 'success');
+                    state.screen = 'HOME';
+                    render();
+                } else {
+                    mostrarErroDeFormulario(formLogin, resultado.erro);
+                }
+            }, 'Entrando...');
         });
     }
 
@@ -864,7 +924,7 @@ export function render() {
 
                     <div class="form-group">
                         <label for="register-password">Senha</label>
-                        <input type="password" id="register-password" class="input-edicao" placeholder="Crie uma senha" required>
+                        <input type="password" id="register-password" class="input-edicao" placeholder="Crie uma senha" minlength="8" autocomplete="new-password" required>
                     </div>
 
                     <button type="submit" class="btn-primary btn-full">Criar Minha Conta</button>
@@ -897,17 +957,24 @@ export function render() {
             render();
         });
 
+        formRegister.addEventListener('input', () => clearFieldErrors(formRegister));
         formRegister.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nome = app.querySelector('#register-name').value;
             const email = app.querySelector('#register-email').value;
             const senha = app.querySelector('#register-password').value;
 
-            const cadastrou = await cadastrar(nome, email, senha);
-            if (cadastrou) {
-                state.screen = 'LOGIN';
-                render();
-            }
+            const button = formRegister.querySelector('[type="submit"]');
+            await withButtonLoading(button, async () => {
+                const resultado = await cadastrar(nome, email, senha);
+                if (resultado.sucesso) {
+                    notify('Conta criada. Agora entre com seu email e senha.', 'success');
+                    state.screen = 'LOGIN';
+                    render();
+                } else {
+                    mostrarErroDeFormulario(formRegister, resultado.erro);
+                }
+            }, 'Criando conta...');
         });
     }
     else if (state.screen === 'HISTORY') {
@@ -1003,7 +1070,7 @@ export function render() {
             const confirm = app.querySelector('#btn-confirmar');
             confirm.addEventListener("click", () => {
                 if (choice === null){
-                    alert("Escolha ao menos uma alternativa.");
+                    notify('Escolha uma alternativa para continuar.', 'error');
                     return;
                 };
 

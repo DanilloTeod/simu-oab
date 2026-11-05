@@ -1,5 +1,6 @@
 
 import { state } from "./state.js";
+import { notify } from "./notifications.js";
 
 const API_BASE_URL = import.meta.env.DEV
     ? 'http://127.0.0.1:5000'
@@ -52,16 +53,20 @@ export async function login(email, senha){
             } catch (erro) {
                 console.error('Erro ao registrar presença após login:', erro);
             }
-            return true;
+            return { sucesso: true };
         } else {
-            alert(dados.erro || 'Falha ao realizar login');
-            return false;
+            return {
+                sucesso: false,
+                erro: dados.erro || 'Não foi possível entrar. Confira seus dados e tente novamente.',
+            };
         }
 
     } catch (erro){
         console.error('Erro na conexão: ', erro);
-        alert('Não foi possível conectar ao servidor.');
-        return false;
+        return {
+            sucesso: false,
+            erro: 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+        };
     }
 };
 
@@ -83,21 +88,23 @@ export async function cadastrar(nome, email, senha) {
         const dados = await resposta.json();
 
         if (resposta.ok) {
-            alert(dados.mensagem || 'Registro realizado com sucesso!');
-
             // efetuar login automático logo após o registro
             // await login(email, senha);
 
-            return true;
+            return { sucesso: true };
         } else {
-            alert(dados.erro || 'Falha ao realizar o registro.');
-            return false;
+            return {
+                sucesso: false,
+                erro: dados.erro || 'Não foi possível criar a conta. Confira os dados e tente novamente.',
+            };
         }
 
     } catch (erro) {
         console.error('Erro na conexão com o servidor:', erro);
-        alert('Não foi possível conectar ao servidor.');
-        return false;
+        return {
+            sucesso: false,
+            erro: 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+        };
     }
 };
 
@@ -106,7 +113,7 @@ export async function enviarSimulado(arrayAnswers, correctAnswers, editionSelect
     const token = localStorage.getItem('token_oab'); // verifica se o usuário está logado
 
     if (!token) { // se não estiver logado, impede o envio do simulado
-        alert('Você precisa estar logado para salvar seu desempenho!');
+        notify('Entre na sua conta para salvar seu desempenho.', 'info');
         return false;
     }
 
@@ -137,21 +144,21 @@ export async function enviarSimulado(arrayAnswers, correctAnswers, editionSelect
             localStorage.removeItem('user_name'); // remove o nome armazenado
             localStorage.removeItem('is_admin');
 
-            alert('Sua sessão expirou ou o token não é válido para este servidor. Faça login novamente.');
+            notify('Sua sessão expirou. Entre novamente para continuar.', 'error');
             return false;
         }
 
         if (resposta.ok) {
-            alert('Simulado salvo com sucesso no seu histórico!');
+            notify('Resultado salvo no seu histórico.', 'success');
             return true;
         } else {
-            alert(dados.erro || 'Erro ao salvar simulado.');
+            notify(dados.erro || 'Não foi possível salvar o simulado. Tente novamente.', 'error');
             return false;
         }
 
     } catch (erro) {
         console.error('Erro ao enviar simulado:', erro);
-        alert('Não foi possível conectar ao servidor.');
+        notify('Não foi possível conectar ao servidor. Tente novamente mais tarde.', 'error');
         return false;
     }
 };
