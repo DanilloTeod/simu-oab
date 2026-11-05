@@ -20,6 +20,12 @@ import {
     setFieldError,
     withButtonLoading,
 } from "./notifications.js";
+import {
+    formatarTempo,
+    iniciarCronometro,
+    pararCronometro,
+    segundosRestantes,
+} from "./timer.js";
 
 let adminRefreshTimer = null;
 
@@ -38,6 +44,30 @@ function resetarTentativa() {
     userState.correctAnswers = 0;
     userState.questionId = [];
     userState.answers = [];
+    pararCronometro();
+    state.timerDeadline = null;
+    state.timerExpired = false;
+    state.quizFinalized = false;
+}
+
+function finalizarSimulado(tempoEsgotado = false) {
+    if (state.quizFinalized) return;
+
+    state.quizFinalized = true;
+    state.timerExpired = tempoEsgotado;
+    pararCronometro();
+    if (tempoEsgotado) {
+        notify('O tempo acabou. Confira as questões que você conseguiu responder.', 'info');
+    }
+
+    enviarSimulado(
+        state.arrayAnswers,
+        state.correctAnswers,
+        state.editionSelected,
+        state.totalQuestions
+    );
+    state.screen = 'RESULT';
+    render();
 }
 
 function formatarComentario(texto) {
@@ -789,6 +819,20 @@ export function render() {
                         <option value="47">47° Exame de Ordem Unificado</option>
                     </select>
                 </div>
+                <div class="timer-selection">
+                    <label for="timer-duration">Tempo do simulado</label>
+                    <select class="input-edicao" id="timer-duration" aria-describedby="timer-duration-help">
+                        <option value="none">Sem limite (sem cronômetro)</option>
+                        ${Array.from({ length: 7 }, (_, index) => {
+                            const minutos = 30 + index * 5;
+                            const referencia = minutos === 30
+                                ? ' — tempo médio para 8 questões'
+                                : '';
+                            return `<option value="${minutos}">${minutos} minutos${referencia}</option>`;
+                        }).join('')}
+                    </select>
+                    <p id="timer-duration-help">A 1ª fase tem 80 questões e 5 horas de prova: a média proporcional é 30 minutos para 8 questões. Você pode acrescentar 5 minutos por opção, até 1 hora.</p>
+                </div>
                 <button id="btn-iniciar" class="btn-primary">Iniciar Simulado</button>
             </div>
 
@@ -806,11 +850,21 @@ export function render() {
         const subjectButtons = app.querySelectorAll('.btn-materia');
         const start = app.querySelector('#btn-iniciar');
         const edition = app.querySelector('#edicao');
+        const timerDuration = app.querySelector('#timer-duration');
 
         edition.value = state.editionSelected;
 
         edition.addEventListener('change', (e) => {
             state.editionSelected = e.target.value;
+        });
+
+        timerDuration.value = state.timerDurationMinutes === null
+            ? 'none'
+            : String(state.timerDurationMinutes);
+        timerDuration.addEventListener('change', event => {
+            state.timerDurationMinutes = event.target.value === 'none'
+                ? null
+                : Number(event.target.value);
         });
 
         subjectButtons.forEach(botao => {
@@ -826,7 +880,13 @@ export function render() {
                 notify('Escolha uma disciplina para iniciar o simulado.', 'error');
             } else {
                 resetarTentativa();
+                state.timerDeadline = state.timerDurationMinutes === null
+                    ? null
+                    : Date.now() + state.timerDurationMinutes * 60_000;
                 state.screen = 'QUIZ';
+                if (state.timerDeadline) {
+                    iniciarCronometro(state.timerDeadline, () => finalizarSimulado(true));
+                }
                 render();
             }
         });
@@ -997,6 +1057,8 @@ export function render() {
     // --- TELA: QUIZ ---
     else if (state.screen === 'QUIZ') {
         loadQuestions(state.editionSelected).then(questoes => {
+            if (state.screen !== 'QUIZ' || state.quizFinalized) return;
+
             state.totalQuestions = questoes.length;
             if (questoes.length === 0){
                 app.innerHTML = `
@@ -1010,14 +1072,7 @@ export function render() {
             }
 
             if (state.currentIndex >= questoes.length){
-                enviarSimulado(
-                    state.arrayAnswers,
-                    state.correctAnswers,
-                    state.editionSelected,
-                    state.totalQuestions
-                );
-                state.screen = "RESULT";
-                render();
+                finalizarSimulado();
                 return;
             };
             
@@ -1026,6 +1081,13 @@ export function render() {
                 ${headerHTML}
                 <div class="card" style="text-align: center;">
                     <h1>Simulado de ${state.subject.toUpperCase()}</h1>
+                    ${state.timerDeadline
+                        ? `<div class="countdown" data-countdown role="timer" aria-label="Tempo restante para o simulado">
+                               <span>Tempo restante</span>
+                               <strong data-timer-display>${formatarTempo(segundosRestantes(state.timerDeadline))}</strong>
+                           </div>`
+                        : '<p class="timer-unlimited">Simulado sem limite de tempo</p>'
+                    }
                     <span style="display: inline-block; padding: 4px 12px; background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; font-size: 0.85rem; margin-bottom: 15px;">
                         ${state.currentIndex + 1} / ${questoes.length}
                     </span>
@@ -1105,6 +1167,27 @@ export function render() {
         };
 
         loadQuestions(state.editionSelected).then(questoes => {
+            if (state.screen !== 'RESULT') return;
+
+            if (userState.answers.length === 0) {
+                app.innerHTML = `
+                    ${headerHTML}
+                    <section class="card card-result" style="text-align: center;">
+                        <h1>${state.timerExpired ? 'Tempo esgotado' : 'Simulado concluído'}</h1>
+                        <p>Você não respondeu nenhuma questão${state.timerExpired ? ' antes do fim do tempo' : ''}.</p>
+                        <button class="btn-primary" id="btn-reiniciar">Voltar ao início</button>
+                    </section>
+                `;
+                bindHeaderEvents(app);
+                app.querySelector('#btn-reiniciar').addEventListener('click', () => {
+                    state.screen = 'HOME';
+                    state.subject = null;
+                    resetarTentativa();
+                    render();
+                });
+                return;
+            }
+
             let gridBotoesHTML = '';
             userState.answers.forEach((answer, index) => {
                 const qId = userState.questionId[index];
@@ -1146,6 +1229,10 @@ export function render() {
                 <div class="card card-result" style="max-width: 1050px !important;">
                     <div style="text-align: center; margin-bottom: 25px;">
                         <h1 style="margin-bottom: 8px;">Simulado Concluído!</h1>
+                        ${state.timerExpired
+                            ? '<p class="countdown-expired">Tempo esgotado. Veja abaixo as questões respondidas.</p>'
+                            : ''
+                        }
                         <p class="concluido" style="font-size: 1.1rem; margin: 0; opacity: 0.9;">
                             Você acertou <strong style="color: #4ade80; font-size: 1.2rem;">${userState.correctAnswers}</strong> de <strong>${userState.answers.length}</strong> questões.
                         </p>

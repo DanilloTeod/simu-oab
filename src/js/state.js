@@ -14,5 +14,8 @@ export const state = {
     currentResultIndex: 0,
     totalQuestions: 0,
     arrayAnswers: [],
+    timerDurationMinutes: null,
+    timerDeadline: null,
+    timerExpired: false,
+    quizFinalized: false,
 };
-
