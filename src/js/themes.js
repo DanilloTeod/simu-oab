@@ -1,5 +1,9 @@
-const PERSONAL_THEME = 'eyshila';
-const AVAILABLE_THEMES = ['paper', 'mist', 'ocean', 'forest', 'plum', 'sunset', PERSONAL_THEME];
+const PERSONAL_THEME = 'personal';
+const AVAILABLE_THEMES = [
+    'paper', 'mist', 'ocean', 'forest', 'plum', 'sunset',
+    'paper-dark', 'mist-dark', 'ocean-dark', 'forest-dark', 'sunset-dark',
+    PERSONAL_THEME,
+];
 
 export function canUsePersonalTheme() {
     return Boolean(localStorage.getItem('token_oab'))

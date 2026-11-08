@@ -10,6 +10,7 @@ export function initNavAnimations() {
     let hideTimer;
     let navVisible = false;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const keepNavVisible = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
 
     const showNav = () => {
         window.clearTimeout(hideTimer);
@@ -33,6 +34,10 @@ export function initNavAnimations() {
     };
 
     const hideNav = () => {
+        if (keepNavVisible) {
+            navVisible = true;
+            return;
+        }
         if (document.querySelector("#settings-panel:not([hidden])")) {
             hideTimer = window.setTimeout(hideNav, VISIBLE_MS);
             return;

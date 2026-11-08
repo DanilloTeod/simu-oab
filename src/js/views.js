@@ -140,6 +140,10 @@ function formatarDataHistorico(data) {
     });
 }
 
+function formatarUltimoAcesso(data) {
+    return data ? formatarDataHistorico(data) : 'Nunca acessou';
+}
+
 function formatarMateria(materia) {
     return getSubjectLabel(materia);
 }
@@ -414,6 +418,10 @@ function atualizarResumoPainelAdmin(app, painel) {
         if (status) status.textContent = estudante.online ? 'Online' : 'Offline';
         const role = item.querySelector('[data-admin-user-role]');
         if (role) role.textContent = estudante.is_admin ? 'Administrador' : 'Estudante';
+        const lastAccess = item.querySelector('[data-admin-user-last-access]');
+        if (lastAccess) {
+            lastAccess.textContent = `Último acesso: ${formatarUltimoAcesso(estudante.last_access)}`;
+        }
         const roleButton = item.querySelector('[data-user-action="role"]');
         if (roleButton) {
             roleButton.dataset.userAdmin = String(estudante.is_admin);
@@ -543,6 +551,9 @@ async function renderTelaAdmin(app, headerHTML) {
                                            <span class="admin-user-badges">
                                                <span data-admin-user-status>${estudante.online ? 'Online' : 'Offline'}</span>
                                                <span data-admin-user-role>${estudante.is_admin ? 'Administrador' : 'Estudante'}</span>
+                                           </span>
+                                           <span class="admin-user-last-access" data-admin-user-last-access>
+                                               Último acesso: ${escaparHTML(formatarUltimoAcesso(estudante.last_access))}
                                            </span>
                                        </span>
                                        <span class="admin-student-count">${estudante.simulations.length} simulados</span>
@@ -704,7 +715,12 @@ function getHeaderUsuarioHTML() {
         ['forest', 'Floresta', '#f0fdf4', '#15803d'],
         ['plum', 'Ameixa', '#faf5ff', '#7e22ce'],
         ['sunset', 'Pôr do sol', '#fff7ed', '#c2410c'],
-        ...(canUsePersonalTheme() ? [['eyshila', 'Roxo da Eyshila', '#120d1b', '#9632ed']] : []),
+        ['paper-dark', 'Papel escuro', '#171717', '#d4d4d4'],
+        ['mist-dark', 'Névoa escura', '#18191e', '#a1a1aa'],
+        ['ocean-dark', 'Oceano noturno', '#07111f', '#60a5fa'],
+        ['forest-dark', 'Floresta noturna', '#0b1b12', '#4ade80'],
+        ['sunset-dark', 'Pôr do sol noturno', '#1d100b', '#fb923c'],
+        ...(canUsePersonalTheme() ? [['personal', 'Roxo personalizado', '#120d1b', '#9632ed']] : []),
     ];
 
     return `
@@ -1741,9 +1757,9 @@ export function render() {
                                 <span class="gabarito-badge">Correta: <strong style="color: #4ade80; font-size: 1.1rem;">${qOriginalAtual.correta.toUpperCase()}</strong></span>
                             </div>
 
-                            <div class="gabarito-comentario" style="margin-top: 15px; padding: 12px; background-color: rgba(255, 255, 255, 0.03); border-radius: 6px; border-left: 3px solid var(--primary);">
-                                <strong style="color: var(--accent); display: block; margin-bottom: 5px;">Gabarito Detalhado:</strong>
-                                <p style="font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; margin: 0;">${formatarComentario(qOriginalAtual.comentario)}</p>
+                            <div class="gabarito-comentario">
+                                <strong>Gabarito Detalhado:</strong>
+                                <p>${formatarComentario(qOriginalAtual.comentario)}</p>
                             </div>
                         </div>
                     </div>
