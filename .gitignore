@@ -26,3 +26,5 @@ dist-ssr
 notas.txt
 .continue
 old_data
+
+.codex/

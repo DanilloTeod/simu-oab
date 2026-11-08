@@ -1,4 +1,19 @@
 let notificationRegion;
+const notificationSound = typeof Audio === 'undefined'
+    ? null
+    : new Audio(new URL('../assets/notification.mp3', import.meta.url).href);
+if (notificationSound) {
+    notificationSound.preload = 'auto';
+    notificationSound.volume = 0.45;
+}
+
+function playNotificationSound() {
+    if (!notificationSound) return;
+    notificationSound.currentTime = 0;
+    notificationSound.play().catch(() => {
+        // Browsers can block sound until the user has interacted with the page.
+    });
+}
 
 function getNotificationRegion() {
     if (notificationRegion?.isConnected) return notificationRegion;
@@ -13,6 +28,7 @@ function getNotificationRegion() {
 }
 
 export function notify(message, type = 'info') {
+    playNotificationSound();
     const region = getNotificationRegion();
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
