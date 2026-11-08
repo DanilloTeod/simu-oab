@@ -2700,6 +2700,7 @@ body:hover .top-navbar {
 }
 
 body { background: var(--theme-page); color: var(--theme-text); }
+.enunciado, .gabarito-enunciado { color: var(--theme-text); }
 .top-navbar { background: var(--theme-surface); border-bottom-color: var(--theme-border); }
 .online-students { color: var(--theme-muted); }
 .card, .seo-content, .no-script-content,
