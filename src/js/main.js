@@ -1,11 +1,16 @@
 import { render } from "./views.js";
-import { atualizarPresenca, registrarAtividadeSessao } from "./api.js";
+import {
+    atualizarPresenca,
+    carregarPerfil,
+    registrarAtividadeSessao,
+} from "./api.js";
 import {
     protectQuizFromAccidentalExit,
     restoreQuizProgress,
 } from "./quiz-progress.js";
 import { notify } from "./notifications.js";
 import { state } from "./state.js";
+import { applySavedTheme } from "./themes.js";
 import "./nav-animations.js";
 
 const ACCOUNT_ACTIVITY_KEY = 'account_last_activity_at';
@@ -14,11 +19,10 @@ const ACTIVITY_SYNC_INTERVAL = 2 * 60 * 1000;
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
-    const temasDisponiveis = ['paper', 'mist', 'ocean', 'forest', 'plum', 'sunset'];
-    const temaSalvo = localStorage.getItem('site_theme');
-    document.documentElement.dataset.theme = temaSalvo === 'purple'
-        ? 'plum'
-        : temasDisponiveis.includes(temaSalvo) ? temaSalvo : 'ocean';
+    if (localStorage.getItem('token_oab')) {
+        localStorage.removeItem('can_use_personal_theme');
+    }
+    applySavedTheme();
 
     const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/';
     const isAppPath = normalizedPath === '/' || normalizedPath === '/index.html';
@@ -32,6 +36,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const quizRestaurado = state.screen !== 'RESET_PASSWORD' && restoreQuizProgress();
     protectQuizFromAccidentalExit();
     render();
+    if (localStorage.getItem('token_oab')) {
+        carregarPerfil()
+            .then(() => {
+                applySavedTheme();
+                render();
+            })
+            .catch(erro => {
+                console.error('Erro ao verificar permissões da conta:', erro);
+                if (!localStorage.getItem('token_oab')) render();
+            });
+    }
     if (quizRestaurado) {
         notify('Seu simulado foi restaurado de onde você parou.', 'info');
     }
@@ -46,6 +61,7 @@ window.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('token_oab');
         localStorage.removeItem('user_name');
         localStorage.removeItem('is_admin');
+        localStorage.removeItem('can_use_personal_theme');
         localStorage.removeItem(ACCOUNT_ACTIVITY_KEY);
         state.screen = 'HOME';
         render();

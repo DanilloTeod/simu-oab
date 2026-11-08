@@ -31,6 +31,7 @@ import {
     segundosRestantes,
 } from "./timer.js";
 import { getExamSubjects, getSubjectLabel, getTimerOptions } from "./exam.js";
+import { applySavedTheme, canUsePersonalTheme, setSiteTheme } from "./themes.js";
 import {
     clearQuizProgress,
     saveQuizProgress,
@@ -703,6 +704,7 @@ function getHeaderUsuarioHTML() {
         ['forest', 'Floresta', '#f0fdf4', '#15803d'],
         ['plum', 'Ameixa', '#faf5ff', '#7e22ce'],
         ['sunset', 'Pôr do sol', '#fff7ed', '#c2410c'],
+        ...(canUsePersonalTheme() ? [['eyshila', 'Roxo da Eyshila', '#120d1b', '#9632ed']] : []),
     ];
 
     return `
@@ -778,8 +780,7 @@ function bindHeaderEvents(container) {
         settingsPanel.querySelectorAll('[data-theme-choice]').forEach(button => {
             button.addEventListener('click', () => {
                 const tema = button.dataset.themeChoice;
-                document.documentElement.dataset.theme = tema;
-                localStorage.setItem('site_theme', tema);
+                if (!setSiteTheme(tema)) return;
                 settingsPanel.querySelectorAll('[data-theme-choice]').forEach(opcao => {
                     opcao.setAttribute('aria-pressed', String(opcao === button));
                 });
@@ -792,6 +793,7 @@ function bindHeaderEvents(container) {
             localStorage.removeItem('token_oab');
             localStorage.removeItem('user_name');
             localStorage.removeItem('is_admin');
+            localStorage.removeItem('can_use_personal_theme');
             localStorage.removeItem('account_last_activity_at');
             atualizarPresenca().catch(erro => {
                 console.error('Erro ao atualizar presença após sair:', erro);
@@ -969,6 +971,7 @@ async function renderTelaConta(app, headerHTML) {
 }
 
 export function render() {
+    applySavedTheme();
     if (adminRefreshTimer !== null) {
         window.clearTimeout(adminRefreshTimer);
         adminRefreshTimer = null;

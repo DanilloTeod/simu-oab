@@ -2681,6 +2681,19 @@ body:hover .top-navbar {
     --theme-accent-contrast: #ffffff;
     --theme-soft: #ffedd5;
 }
+:root[data-theme="eyshila"] {
+    color-scheme: dark;
+    --theme-page: #100b18;
+    --theme-surface: #21172e;
+    --theme-text: #f8f1ff;
+    --theme-muted: #a5a0c8;
+    --theme-border: #382545;
+    --theme-accent: #9632ed;
+    --theme-accent-contrast: #ffffff;
+    --theme-soft: #342044;
+    --theme-input-bg: #fffcc8;
+    --theme-input-text: #20172a;
+}
 
 body { background: var(--theme-page); color: var(--theme-text); }
 .top-navbar { background: var(--theme-surface); border-bottom-color: var(--theme-border); }
@@ -2704,8 +2717,8 @@ h1, h2, h3, .history-run-title, .sidebar-titulo,
 .admin-stat span, .admin-user-badges > span { color: var(--theme-muted); }
 .input-edicao, .admin-user-form input:not([type="checkbox"]), .admin-user-edit-form input {
     border-color: var(--theme-border);
-    background: var(--theme-surface);
-    color: var(--theme-text);
+    background: var(--theme-input-bg, var(--theme-surface));
+    color: var(--theme-input-text, var(--theme-text));
 }
 .simulation-mode-option, .btn-materia, .btn-alternativa, .btn-grid-questao,
 .theme-option {

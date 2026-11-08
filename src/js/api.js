@@ -12,6 +12,7 @@ function limparDadosSessao() {
     localStorage.removeItem('token_oab');
     localStorage.removeItem('user_name');
     localStorage.removeItem('is_admin');
+    localStorage.removeItem('can_use_personal_theme');
     localStorage.removeItem(ACCOUNT_ACTIVITY_KEY);
 }
 
@@ -41,6 +42,10 @@ export async function login(email, senha){
             localStorage.setItem('token_oab', dados.token); // armazena o token JWT recebido do backend
             localStorage.setItem('user_name', dados.estudante.nome); // armazena o nome do estudante
             localStorage.setItem('is_admin', String(dados.is_admin === true));
+            localStorage.setItem(
+                'can_use_personal_theme',
+                String(dados.can_use_personal_theme === true),
+            );
             localStorage.setItem(ACCOUNT_ACTIVITY_KEY, String(Date.now()));
             try {
                 await atualizarPresenca();
@@ -160,6 +165,10 @@ export async function carregarPerfil() {
         limparDadosSessao();
     }
     if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível carregar sua conta.');
+    localStorage.setItem(
+        'can_use_personal_theme',
+        String(dados.can_use_personal_theme === true),
+    );
     return dados;
 }
 
